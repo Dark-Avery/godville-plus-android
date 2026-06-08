@@ -1,0 +1,29 @@
+Erinome License (EL)
+
+Copyright (c) 2015-2021 Erinome Project
+Copyright for portions of this project are held by zeird, 2014-2015 as part of project Godville UI+.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including the rights to use, copy, modify,
+merge, publish, distribute copies of the Software, on the following conditions:
+
+You are not allowed to publish or distribute your product containing any portions
+of the Software or its source code unless:
+1. Your product contains its own readable non-obfuscated non-minified source code
+or you publish full source code of your product on the web making it accessible
+to any interested party;
+2. You grant implicit irrevocable permission to the author of the Software to use
+any portion of the source code of your product in terms of porting your changes
+back to the Software thus making you an implicit contributor to the Software.
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -1,0 +1,29 @@
+html { height: 100%; }
+
+body { overflow: auto; min-height: 100%; }
+
+.hidden { display: none !important; }
+
+.eguip_font { font-family: eGUIp, Verdana, Helvetica, Arial, sans-serif; }
+
+.e_clickable { cursor: pointer; }
+
+.e_nowrap { white-space: nowrap; }
+
+.e_tooltip { position: absolute; background: #FFF; border: 1px solid #222; border-radius: 3px; padding: 3px; min-width: 0.6em; font-size: 0.8em; white-space: pre-line; z-index: 11000; }
+
+.th_nightly .e_tooltip { background: #191919; border-color: #DDD; color: #EEE; }
+
+.e_fight_result { cursor: default; }
+
+.e_fight_result_exp { font-size: 1.1em; color: goldenrod; }
+
+.e_fight_result_log { font-size: 1.3em; color: saddlebrown; }
+
+.th_nightly .e_fight_result_log { color: #984C16; }
+
+.e_fight_result_byte, .e_fight_result_soul { color: #00639E; }
+
+.th_nightly .e_fight_result_byte, .th_nightly .e_fight_result_soul { color: #0B7DC1; }
+
+.e_fight_result_soul { font-size: 0.8em; }

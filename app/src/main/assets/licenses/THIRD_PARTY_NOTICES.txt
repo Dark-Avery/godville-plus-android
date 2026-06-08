@@ -1,0 +1,18 @@
+Third-Party Notices
+
+Erinome Godville UI+
+Version: 1.1.39.8
+Homepage: https://gv.erinome.net/
+License: Erinome License, included as ERINOME_LICENSE.txt.
+Bundled readable source: assets/erinome.
+
+Bundled JavaScript libraries:
+- base64-js 1.2.2, MIT License, copyright Jameson Little.
+- jsep 0.3.4, MIT License, copyright Stephen Oney.
+- pako 1.0.6, MIT License, copyright Vitaly Puzrin and Andrei Tuputcyn.
+
+Their license texts are included next to this notice.
+
+AndroidX and the Android Gradle Plugin are licensed under Apache License 2.0.
+Gson is licensed under Apache License 2.0. Dependency versions and full project
+source are published with every release in the Godville+ GitHub repository.

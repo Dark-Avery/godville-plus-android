@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Godville+</string>
+    <string name="home">Домой</string>
+    <string name="refresh">Обновить</string>
+    <string name="app_menu">Меню Godville+</string>
+    <string name="menu_button">⋮</string>
+    <string name="background_fast">Фон: быстрый</string>
+    <string name="background_economy">Фон: экономичный</string>
+    <string name="background_off">Фон: выключить</string>
+    <string name="about">О приложении</string>
+    <string name="about_title">О Godville+</string>
+    <string name="close">Закрыть</string>
+    <string name="event_channel_name">События Erinome</string>
+    <string name="event_channel_description">Уведомления Erinome Godville UI+</string>
+    <string name="monitor_channel_name">Фоновый мониторинг</string>
+    <string name="monitor_channel_description">Постоянный статус быстрого мониторинга Godville</string>
+    <string name="monitor_notification_title">Godville+ следит за событиями</string>
+    <string name="monitor_notification_text">Быстрая проверка активна; нажмите, чтобы открыть приложение</string>
+    <string name="stop_monitoring">Остановить</string>
+    <string name="session_expired_title">Нужен вход в Godville</string>
+    <string name="session_expired_text">Откройте Godville+ и войдите снова, чтобы продолжить мониторинг.</string>
+</resources>
