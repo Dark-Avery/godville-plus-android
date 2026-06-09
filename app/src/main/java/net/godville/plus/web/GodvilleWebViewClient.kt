@@ -12,6 +12,7 @@ import net.godville.plus.erinome.ErinomeInjector
 class GodvilleWebViewClient(
     private val injector: ErinomeInjector,
     private val onMainFrameNavigation: () -> Unit,
+    private val onInternalPageFinished: (String) -> Unit = {},
 ) : WebViewClient() {
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         return when (AllowedNavigation.classify(request.url.toString())) {
@@ -41,6 +42,7 @@ class GodvilleWebViewClient(
     override fun onPageFinished(view: WebView, url: String) {
         if (AllowedNavigation.classify(url) == NavigationTarget.INTERNAL) {
             injector.inject(view, url)
+            onInternalPageFinished(url)
         }
     }
 

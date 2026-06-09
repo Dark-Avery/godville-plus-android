@@ -4,13 +4,22 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.BaseAdapter
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
+import android.widget.ImageButton
+import android.widget.ListView
 import android.widget.PopupMenu
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -33,9 +42,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var notifications: NotificationController
     private lateinit var erinomeInjector: ErinomeInjector
+    private lateinit var nativeTabButtons: Map<NativeTab, Button>
+    private lateinit var appMenuButton: Button
+    private lateinit var tabStripScroll: HorizontalScrollView
+    private lateinit var nativeMenuList: ListView
+    private lateinit var quickActionButton: ImageButton
+    private lateinit var miniRemoteMenu: FrameLayout
     private val webRequestExecutor = ErinomeWebRequestExecutor()
     private val webRequestThread = Executors.newSingleThreadExecutor()
+    private val pendingShellTab = PendingShellTab()
     private var pageGeneration = 0
+    private var selectedTab = NativeTab.PULT
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -68,14 +85,20 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = GodvilleWebViewClient(
             injector = erinomeInjector,
             onMainFrameNavigation = { pageGeneration++ },
+            onInternalPageFinished = ::handleInternalPageFinished,
         )
 
-        findViewById<Button>(R.id.appMenuButton).setOnClickListener {
-            showAppMenu(it)
-        }
+        bindNativeTabs()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (webView.canGoBack()) webView.goBack() else finish()
+                when {
+                    nativeMenuList.visibility == View.VISIBLE -> {
+                        hideNativeMenu()
+                        updateNativeTabSelection(selectedTab)
+                    }
+                    webView.canGoBack() -> webView.goBack()
+                    else -> finish()
+                }
             }
         })
 
@@ -112,9 +135,31 @@ class MainActivity : AppCompatActivity() {
                 }
                 is ErinomeMessage.PlaySound -> Unit
                 is ErinomeMessage.LoadModule -> erinomeInjector.loadModule(webView, message.source)
+                is ErinomeMessage.ShellTab -> handleShellTab(message.tab)
                 is ErinomeMessage.WebRequest -> handleWebRequest(message, sourceOrigin)
             }
         }
+    }
+
+    private fun handleShellTab(tabName: String) {
+        val tab = NativeTab.entries.firstOrNull { it.bridgeName == tabName } ?: return
+        selectedTab = tab
+        hideMiniRemote()
+        hideNativeMenu()
+        updateNativeTabSelection(tab)
+        updateQuickActionVisibility()
+    }
+
+    private fun handleInternalPageFinished(url: String) {
+        updateQuickActionVisibility(url)
+        pendingShellTab.consumeFor(url)
+            ?.let { tabName -> NativeTab.entries.firstOrNull { it.bridgeName == tabName } }
+            ?.let { tab ->
+                webView.postDelayed(
+                    { webView.evaluateJavascript(GodvilleShellScripts.selectTab(tab.webSearchTerms), null) },
+                    TAB_ACTION_DELAY_MS,
+                )
+            }
     }
 
     private fun handleWebRequest(request: ErinomeMessage.WebRequest, sourceOrigin: String) {
@@ -195,6 +240,152 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun bindNativeTabs() {
+        nativeTabButtons = NativeTab.entries.associateWith { tab ->
+            findViewById<Button>(tab.buttonId).apply {
+                setOnClickListener { selectNativeTab(tab) }
+            }
+        }
+        appMenuButton = findViewById<Button>(R.id.appMenuButton).apply {
+            setOnClickListener { selectMenuTab() }
+            setOnLongClickListener {
+                showAppMenu(it)
+                true
+            }
+        }
+        tabStripScroll = findViewById(R.id.nativeTopBar)
+        nativeMenuList = findViewById<ListView>(R.id.nativeMenuList).apply {
+            adapter = GodvilleMenuAdapter(buildGodvilleMenuRows())
+            setOnItemClickListener { parent, _, position, _ ->
+                val row = parent.getItemAtPosition(position) as GodvilleMenuRow
+                if (row is GodvilleMenuRow.Action) {
+                    row.onClick()
+                }
+            }
+        }
+        miniRemoteMenu = findViewById(R.id.miniRemoteMenu)
+        quickActionButton = findViewById<ImageButton>(R.id.quickActionButton).apply {
+            setOnClickListener { toggleMiniRemote() }
+        }
+        findViewById<ImageButton>(R.id.miniRemoteVoice).setOnClickListener {
+            hideMiniRemote()
+            selectNativeTab(NativeTab.PULT)
+            webView.postDelayed({ webView.evaluateJavascript(GodvilleShellScripts.focusVoice(), null) }, TAB_ACTION_DELAY_MS)
+        }
+        findViewById<ImageButton>(R.id.miniRemoteGood).setOnClickListener {
+            runRemoteAction("#cntrl .enc_link")
+        }
+        findViewById<ImageButton>(R.id.miniRemoteBad).setOnClickListener {
+            runRemoteAction("#cntrl .pun_link")
+        }
+        findViewById<ImageButton>(R.id.miniRemoteMiracle).setOnClickListener {
+            runRemoteAction("#cntrl .mir_link")
+        }
+        updateNativeTabSelection(NativeTab.PULT)
+        updateQuickActionVisibility()
+    }
+
+    private fun selectNativeTab(tab: NativeTab) {
+        selectedTab = tab
+        hideMiniRemote()
+        hideNativeMenu()
+        updateNativeTabSelection(tab)
+        if (webView.url?.let(PendingShellTab::isSuperheroUrl) == true) {
+            webView.evaluateJavascript(GodvilleShellScripts.selectTab(tab.webSearchTerms), null)
+        } else {
+            pendingShellTab.remember(tab.bridgeName)
+            webView.loadUrl(HOME_URL)
+        }
+        updateQuickActionVisibility()
+    }
+
+    private fun updateNativeTabSelection(tab: NativeTab) {
+        val activeText = ContextCompat.getColor(this, R.color.shell_text_primary)
+        val inactiveText = ContextCompat.getColor(this, R.color.shell_text_secondary)
+        appMenuButton.isSelected = false
+        appMenuButton.setTextColor(inactiveText)
+        nativeTabButtons.forEach { (candidate, button) ->
+            val active = candidate == tab
+            button.isSelected = active
+            button.setTextColor(if (active) activeText else inactiveText)
+        }
+        nativeTabButtons[tab]?.let(::scrollTabIntoView)
+    }
+
+    private fun selectMenuTab() {
+        hideMiniRemote()
+        nativeMenuList.visibility = View.VISIBLE
+        updateQuickActionVisibility()
+        val activeText = ContextCompat.getColor(this, R.color.shell_text_primary)
+        val inactiveText = ContextCompat.getColor(this, R.color.shell_text_secondary)
+        appMenuButton.isSelected = true
+        appMenuButton.setTextColor(activeText)
+        nativeTabButtons.values.forEach { button ->
+            button.isSelected = false
+            button.setTextColor(inactiveText)
+        }
+        tabStripScroll.smoothScrollTo(0, 0)
+    }
+
+    private fun hideNativeMenu() {
+        if (nativeMenuList.visibility != View.GONE) {
+            nativeMenuList.visibility = View.GONE
+            updateQuickActionVisibility()
+        }
+    }
+
+    private fun updateQuickActionVisibility(url: String? = webView.url) {
+        val show = url?.let(PendingShellTab::isSuperheroUrl) == true
+        quickActionButton.visibility = if (show) View.VISIBLE else View.GONE
+        if (!show) hideMiniRemote()
+    }
+
+    private fun scrollTabIntoView(tab: Button) {
+        tabStripScroll.post {
+            val targetLeft = tab.left - tabStripScroll.width / 2 + tab.width / 2
+            tabStripScroll.smoothScrollTo(targetLeft.coerceAtLeast(0), 0)
+        }
+    }
+
+    private fun toggleMiniRemote() {
+        miniRemoteMenu.visibility = if (miniRemoteMenu.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+    }
+
+    private fun hideMiniRemote() {
+        miniRemoteMenu.visibility = View.GONE
+    }
+
+    private fun runRemoteAction(selector: String) {
+        hideMiniRemote()
+        selectNativeTab(NativeTab.PULT)
+        webView.postDelayed(
+            { webView.evaluateJavascript(GodvilleShellScripts.clickRemoteAction(selector), null) },
+            TAB_ACTION_DELAY_MS,
+        )
+    }
+
+    private fun buildGodvilleMenuRows(): List<GodvilleMenuRow> =
+        buildList {
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.SETTINGS.title) { openMenuUrl("https://godville.net/user/profile/settings") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.ABOUT.title) { showAbout() })
+            add(GodvilleMenuRow.Header("Информация"))
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.GAME_NEWS.title) { openMenuUrl("https://godville.net/blog") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.NEWSPAPER.title) { openMenuUrl("https://godville.net/news") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.WIKI.title) { openMenuUrl("https://wiki.godville.net/") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.FORUM.title) { openMenuUrl("https://godville.net/forums") })
+            add(GodvilleMenuRow.Header("Идеи"))
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.IDEAS_UPPER.title) { openMenuUrl("https://godville.net/ideabox/cards") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.IDEAS_LOWER.title) { openMenuUrl("https://godville.net/ideabox") })
+            add(GodvilleMenuRow.Header("Помощь"))
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.FAQ.title) { openMenuUrl("https://godville.net/help/faq_mob") })
+            add(GodvilleMenuRow.Action(GodvilleMenuItem.HINTS.title) { openMenuUrl("https://godville.net/help") })
+        }
+
+    private fun openMenuUrl(url: String) {
+        hideNativeMenu()
+        webView.loadUrl(url)
+    }
+
     @SuppressLint("RequiresFeature")
     private fun installErinomeMessageBridge() {
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -222,10 +413,76 @@ class MainActivity : AppCompatActivity() {
         private const val MENU_ECONOMY = 4
         private const val MENU_OFF = 5
         private const val MENU_ABOUT = 6
+        private const val TAB_ACTION_DELAY_MS = 250L
         private val ALLOWED_BRIDGE_ORIGINS = setOf(
             "https://godville.net",
             "https://b.godville.net",
             "https://godvillegame.com",
         )
+    }
+
+    private enum class NativeTab(
+        val buttonId: Int,
+        val bridgeName: String,
+        val webSearchTerms: List<String>,
+    ) {
+        PULT(R.id.tabPult, "pult", listOf("Пульт", "Pульт", "ПУЛЬТ")),
+        DIARY(R.id.tabDiary, "diary", listOf("Дневник", "ДНЕВНИК", "Дневник героя")),
+        HERO(R.id.tabHero, "hero", listOf("Герой", "ГЕРОЙ", "Данные героя")),
+        ITEMS(R.id.tabItems, "items", listOf("Вещи", "ВЕЩИ", "Снаряжение")),
+        FRIENDS(R.id.tabFriends, "friends", listOf("Друзья", "ДРУЗЬЯ", "Союзники", "Соратники")),
+        PANTHEONS(R.id.tabPantheons, "pantheons", listOf("Пантеоны", "ПАНТЕОНЫ"));
+    }
+
+    private enum class GodvilleMenuItem(val title: String) {
+        SETTINGS("Настройки"),
+        ABOUT("О программе"),
+        GAME_NEWS("Новости игры"),
+        NEWSPAPER("Ежедневная газета"),
+        WIKI("Энциклобогия"),
+        FORUM("Форум"),
+        IDEAS_UPPER("Верхний ящик (голосование)"),
+        IDEAS_LOWER("Нижний ящик (предложение)"),
+        FAQ("Часто задаваемые вопросы"),
+        HINTS("Игровые подсказки"),
+    }
+
+    private sealed interface GodvilleMenuRow {
+        val title: String
+
+        data class Header(override val title: String) : GodvilleMenuRow
+        data class Action(override val title: String, val onClick: () -> Unit) : GodvilleMenuRow
+    }
+
+    private inner class GodvilleMenuAdapter(
+        private val rows: List<GodvilleMenuRow>,
+    ) : BaseAdapter() {
+        override fun getCount(): Int = rows.size
+        override fun getItem(position: Int): Any = rows[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+        override fun areAllItemsEnabled(): Boolean = false
+        override fun isEnabled(position: Int): Boolean = rows[position] is GodvilleMenuRow.Action
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val row = rows[position]
+            val textView = (convertView as? TextView) ?: TextView(this@MainActivity)
+            textView.text = row.title
+            textView.setPadding(36, if (row is GodvilleMenuRow.Header) 34 else 28, 36, 28)
+            textView.textSize = if (row is GodvilleMenuRow.Header) 18f else 17f
+            textView.setTypeface(null, if (row is GodvilleMenuRow.Header) Typeface.BOLD else Typeface.NORMAL)
+            textView.setTextColor(
+                ContextCompat.getColor(
+                    this@MainActivity,
+                    R.color.shell_text_primary,
+                ),
+            )
+            textView.isEnabled = row is GodvilleMenuRow.Action
+            textView.isClickable = false
+            textView.isFocusable = false
+            textView.setBackgroundColor(
+                ContextCompat.getColor(this@MainActivity, R.color.shell_background),
+            )
+            return textView
+        }
     }
 }

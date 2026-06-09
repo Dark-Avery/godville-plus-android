@@ -3,24 +3,215 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/shell_background"
     tools:ignore="MergeRootFrame">
 
-    <WebView
-        android:id="@+id/webView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="@color/shell_background"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/appMenuButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top|end"
-        android:layout_margin="4dp"
-        android:alpha="0.45"
-        android:contentDescription="@string/app_menu"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:padding="0dp"
-        android:text="@string/menu_button"
-        android:textSize="22sp" />
+        <HorizontalScrollView
+            android:id="@+id/nativeTopBar"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:background="@color/shell_surface"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/tabStrip"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/appMenuButton"
+                    style="@style/NativeShellTab"
+                    android:layout_width="68dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/app_menu"
+                    android:text="@string/menu_button"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/tabPult"
+                    style="@style/NativeShellTab"
+                    android:layout_width="68dp"
+                    android:text="@string/tab_pult" />
+
+                <Button
+                    android:id="@+id/tabDiary"
+                    style="@style/NativeShellTab"
+                    android:layout_width="85dp"
+                    android:text="@string/tab_diary" />
+
+                <Button
+                    android:id="@+id/tabHero"
+                    style="@style/NativeShellTab"
+                    android:layout_width="68dp"
+                    android:text="@string/tab_hero" />
+
+                <Button
+                    android:id="@+id/tabItems"
+                    style="@style/NativeShellTab"
+                    android:layout_width="68dp"
+                    android:text="@string/tab_items" />
+
+                <Button
+                    android:id="@+id/tabFriends"
+                    style="@style/NativeShellTab"
+                    android:layout_width="70dp"
+                    android:text="@string/tab_friends" />
+
+                <Button
+                    android:id="@+id/tabPantheons"
+                    style="@style/NativeShellTab"
+                    android:layout_width="95dp"
+                    android:text="@string/tab_pantheons" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <WebView
+                android:id="@+id/webView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#000000" />
+
+            <ListView
+                android:id="@+id/nativeMenuList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="22dp"
+                android:background="@color/shell_background"
+                android:cacheColorHint="@android:color/transparent"
+                android:divider="@color/shell_divider"
+                android:dividerHeight="1px"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/quickActionButton"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="11dp"
+        android:layout_marginBottom="11dp"
+        android:background="@drawable/fab_background"
+        android:contentDescription="@string/quick_action"
+        android:elevation="8dp"
+        android:padding="16dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_remote_control" />
+
+    <FrameLayout
+        android:id="@+id/miniRemoteMenu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/miniRemoteMiracle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="15dp"
+            android:layout_marginBottom="155dp"
+            android:background="@drawable/mini_action_background"
+            android:contentDescription="@string/action_miracle"
+            android:padding="10dp"
+            android:src="@drawable/ic_mini_miracle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="137dp"
+            android:background="@drawable/mini_label_background"
+            android:gravity="center"
+            android:text="@string/action_miracle_short"
+            android:textColor="@color/shell_text_primary"
+            android:textSize="11sp" />
+
+        <ImageButton
+            android:id="@+id/miniRemoteBad"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="84dp"
+            android:layout_marginBottom="149dp"
+            android:background="@drawable/mini_action_background"
+            android:contentDescription="@string/action_bad"
+            android:padding="10dp"
+            android:src="@drawable/ic_mini_bad" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="72dp"
+            android:layout_marginBottom="130dp"
+            android:background="@drawable/mini_label_background"
+            android:gravity="center"
+            android:text="@string/action_bad_short"
+            android:textColor="@color/shell_text_primary"
+            android:textSize="11sp" />
+
+        <ImageButton
+            android:id="@+id/miniRemoteVoice"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="92dp"
+            android:layout_marginBottom="107dp"
+            android:background="@drawable/mini_action_background"
+            android:contentDescription="@string/action_voice"
+            android:padding="10dp"
+            android:src="@drawable/ic_mini_voice" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="87dp"
+            android:layout_marginBottom="88dp"
+            android:background="@drawable/mini_label_background"
+            android:gravity="center"
+            android:text="@string/action_voice_short"
+            android:textColor="@color/shell_text_primary"
+            android:textSize="11sp" />
+
+        <ImageButton
+            android:id="@+id/miniRemoteGood"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="105dp"
+            android:layout_marginBottom="49dp"
+            android:background="@drawable/mini_action_background"
+            android:contentDescription="@string/action_good"
+            android:padding="10dp"
+            android:src="@drawable/ic_mini_good" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="93dp"
+            android:layout_marginBottom="30dp"
+            android:background="@drawable/mini_label_background"
+            android:gravity="center"
+            android:text="@string/action_good_short"
+            android:textColor="@color/shell_text_primary"
+            android:textSize="11sp" />
+    </FrameLayout>
 </FrameLayout>

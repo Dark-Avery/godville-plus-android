@@ -1,0 +1,24 @@
+/* Native Android shell owns the visible top-level navigation. */
+body.mbg #tabbar > .tab-selector,
+body.mbg #tabbar .tab-selector {
+  display: none !important;
+}
+
+body.mbg .tab-selector {
+  display: none !important;
+}
+
+body.mbg #tabbar .tab-content {
+  padding-bottom: 0 !important;
+}
+
+body.mbg #logger,
+body.mbg #informer_bar,
+body.mbg #forum_informer_bar,
+body.mbg #menu_rmt,
+body.mbg #menu_w,
+body.mbg .b_handle,
+body.mbg .msgDockWrapper > .msgDock.frbutton:not(.frbutton_pressed),
+body.mbg .msgDock.frbutton:not(.frbutton_pressed) {
+  display: none !important;
+}

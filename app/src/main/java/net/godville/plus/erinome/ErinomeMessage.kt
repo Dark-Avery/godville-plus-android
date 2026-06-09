@@ -20,6 +20,8 @@ sealed interface ErinomeMessage {
 
     data class LoadModule(val source: String) : ErinomeMessage
 
+    data class ShellTab(val tab: String) : ErinomeMessage
+
     data class WebRequest(
         val url: String,
         val method: String,
@@ -60,6 +62,10 @@ sealed interface ErinomeMessage {
 
                 "loadModule" -> LoadModule(
                     source = json.requiredText("source", 128) ?: return null,
+                )
+
+                "shellTab" -> ShellTab(
+                    tab = json.requiredText("tab", 32)?.lowercase() ?: return null,
                 )
 
                 "webxhr" -> WebRequest(

@@ -33,6 +33,27 @@ class ErinomeAssetBundleTest {
     }
 
     @Test
+    fun shellTabBridgeObservesActiveMobileTab() {
+        val bridge = ErinomeAssetBundle.shellTabBridgeJavascript()
+
+        assertTrue(bridge.contains("#tabbar .tab-selector > .tab-btn"))
+        assertTrue(bridge.contains("MutationObserver"))
+        assertTrue(bridge.contains("type: 'shellTab'"))
+    }
+
+    @Test
+    fun injectStyleJavascriptTargetsNamedAssetAndStyleElement() {
+        val script = ErinomeAssetBundle.injectStyleJavascript(
+            assetPath = "godville-plus-native-shell.css",
+            elementId = "godville-plus-native-shell-style",
+        )
+
+        assertTrue(script.contains("godville-plus-native-shell.css"))
+        assertTrue(script.contains("godville-plus-native-shell-style"))
+        assertTrue(script.contains("document.createElement('style')"))
+    }
+
+    @Test
     fun loaderAcceptsPrivilegedMessagesOnlyFromTheCurrentWindowAndOrigin() {
         val loader = File("src/main/assets/erinome/loader.js").readText()
 

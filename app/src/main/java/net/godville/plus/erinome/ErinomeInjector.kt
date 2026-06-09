@@ -17,7 +17,12 @@ class ErinomeInjector(context: Context) {
         textAssets = STYLE_ASSETS.associateWith { assets.readText("erinome/$it") },
         assetUrls = buildAssetUrls(),
     )
+    private val nativeShellStyle = ErinomeAssetBundle.injectStyleJavascript(
+        assetPath = NATIVE_SHELL_STYLE_ASSET,
+        elementId = "godville-plus-native-shell-style",
+    )
     private val webRequestBridge = ErinomeAssetBundle.webRequestBridgeJavascript()
+    private val shellTabBridge = ErinomeAssetBundle.shellTabBridgeJavascript()
     private var navigationGeneration = 0
     private var currentDocumentUrl: String? = null
 
@@ -85,9 +90,11 @@ class ErinomeInjector(context: Context) {
         (function() {
           if (window.location.href.split("#", 1)[0] !== ${gson.toJson(expectedDocumentUrl)}) return "stale";
           if (window.__godvillePlusErinomeInjected) return "already";
-          try {
+            try {
             $assetBundle
+            $nativeShellStyle
             $webRequestBridge
+            $shellTabBridge
             window.__godvillePlusErinomeInjected = true;
             return "bundle-ok";
           } catch (error) {
@@ -146,6 +153,7 @@ class ErinomeInjector(context: Context) {
 
     companion object {
         private const val TAG = "ErinomeInjector"
+        private const val NATIVE_SHELL_STYLE_ASSET = "godville-plus-native-shell.css"
         private val MODULE_ASSETS = listOf(
             "base64.min.js",
             "jsep.min.js",
@@ -164,6 +172,7 @@ class ErinomeInjector(context: Context) {
         private val STYLE_ASSETS = listOf(
             "common.css",
             "superhero.css",
+            NATIVE_SHELL_STYLE_ASSET,
             "options.css",
             "forum.css",
         )

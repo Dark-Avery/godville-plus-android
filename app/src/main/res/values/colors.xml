@@ -1,3 +1,12 @@
 <resources>
     <color name="launcher_background">#252A30</color>
+    <color name="shell_background">#000000</color>
+    <color name="shell_surface">#151515</color>
+    <color name="shell_accent">#55C8EA</color>
+    <color name="shell_divider">#10313B</color>
+    <color name="shell_text_primary">#F2F2F2</color>
+    <color name="shell_text_secondary">#A7A9B0</color>
+    <color name="shell_fab">#087C93</color>
+    <color name="shell_mini_action">#26343A</color>
+    <color name="shell_mini_label">#616161</color>
 </resources>

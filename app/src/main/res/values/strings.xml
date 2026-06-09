@@ -1,9 +1,24 @@
 <resources>
     <string name="app_name">Godville+</string>
+    <string name="tab_pult">ПУЛЬТ</string>
+    <string name="tab_diary">ДНЕВНИК</string>
+    <string name="tab_hero">ГЕРОЙ</string>
+    <string name="tab_items">ВЕЩИ</string>
+    <string name="tab_friends">ДРУЗЬЯ</string>
+    <string name="tab_pantheons">ПАНТЕОНЫ</string>
+    <string name="quick_action">Быстрое действие</string>
     <string name="home">Домой</string>
     <string name="refresh">Обновить</string>
-    <string name="app_menu">Меню Godville+</string>
+    <string name="app_menu">Меню</string>
     <string name="menu_button">⋮</string>
+    <string name="action_good">Сделать хорошо</string>
+    <string name="action_good_short">Хорошо</string>
+    <string name="action_bad">Сделать плохо</string>
+    <string name="action_bad_short">Плохо</string>
+    <string name="action_voice">Глас божий</string>
+    <string name="action_voice_short">Глас</string>
+    <string name="action_miracle">Сделать чудо</string>
+    <string name="action_miracle_short">Чудо</string>
     <string name="background_fast">Фон: быстрый</string>
     <string name="background_economy">Фон: экономичный</string>
     <string name="background_off">Фон: выключить</string>

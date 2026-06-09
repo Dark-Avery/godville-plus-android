@@ -35,6 +35,14 @@ class ErinomeMessageTest {
     }
 
     @Test
+    fun decodesNativeShellTabUpdates() {
+        assertEquals(
+            ErinomeMessage.ShellTab("friends"),
+            ErinomeMessage.decode("""{"type":"shellTab","tab":"FRIENDS"}"""),
+        )
+    }
+
+    @Test
     fun decodesWebRequestUsedByErinomePhraseDatabase() {
         assertEquals(
             ErinomeMessage.WebRequest(
