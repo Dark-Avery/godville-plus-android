@@ -12,6 +12,18 @@ body.mbg #tabbar .tab-content {
   padding-bottom: 0 !important;
 }
 
+body.mbg #statusbar {
+  height: 1px !important;
+  left: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  z-index: -1 !important;
+}
+
 body.mbg #logger,
 body.mbg #informer_bar,
 body.mbg #forum_informer_bar,

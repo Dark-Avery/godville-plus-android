@@ -3,6 +3,7 @@ package net.godville.plus.erinome
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.godville.plus.NativeReplicaSnapshot
 
 sealed interface ErinomeMessage {
     data class Notify(
@@ -21,6 +22,8 @@ sealed interface ErinomeMessage {
     data class LoadModule(val source: String) : ErinomeMessage
 
     data class ShellTab(val tab: String) : ErinomeMessage
+
+    data class NativeSnapshot(val snapshot: NativeReplicaSnapshot) : ErinomeMessage
 
     data class WebRequest(
         val url: String,
@@ -66,6 +69,14 @@ sealed interface ErinomeMessage {
 
                 "shellTab" -> ShellTab(
                     tab = json.requiredText("tab", 32)?.lowercase() ?: return null,
+                )
+
+                "nativeSnapshot" -> NativeSnapshot(
+                    snapshot = json.get("snapshot")
+                        ?.takeUnless { it.isJsonNull }
+                        ?.toString()
+                        ?.let(NativeReplicaSnapshot::decode)
+                        ?: return null,
                 )
 
                 "webxhr" -> WebRequest(

@@ -43,6 +43,25 @@ class ErinomeMessageTest {
     }
 
     @Test
+    fun decodesNativeReplicaSnapshot() {
+        val message = ErinomeMessage.decode(
+            """
+            {
+              "type":"nativeSnapshot",
+              "snapshot":{
+                "status":{"hp":"468/508","godpower":"100%","inventory":"7/50","gold":"765"},
+                "logger":{"visible":true,"segments":[{"text":"gld−8250","color":"#FFD700","bold":true}]}
+              }
+            }
+            """.trimIndent(),
+        )
+
+        require(message is ErinomeMessage.NativeSnapshot)
+        assertEquals("468/508", message.snapshot.status.hp)
+        assertEquals("gld−8250", message.snapshot.logger.segments.single().text)
+    }
+
+    @Test
     fun decodesWebRequestUsedByErinomePhraseDatabase() {
         assertEquals(
             ErinomeMessage.WebRequest(

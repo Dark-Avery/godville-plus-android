@@ -4,9 +4,14 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
@@ -17,6 +22,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -48,6 +54,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativeMenuList: ListView
     private lateinit var quickActionButton: ImageButton
     private lateinit var miniRemoteMenu: FrameLayout
+    private lateinit var nativeStatusBar: View
+    private lateinit var nativeStatusHp: TextView
+    private lateinit var nativeStatusGp: TextView
+    private lateinit var nativeStatusInv: TextView
+    private lateinit var nativeStatusGold: TextView
+    private lateinit var nativeLoggerScroll: HorizontalScrollView
+    private lateinit var nativeUiPlusLogger: LinearLayout
+    private var shellAccentColor: Int = Color.CYAN
     private val webRequestExecutor = ErinomeWebRequestExecutor()
     private val webRequestThread = Executors.newSingleThreadExecutor()
     private val pendingShellTab = PendingShellTab()
@@ -136,6 +150,7 @@ class MainActivity : AppCompatActivity() {
                 is ErinomeMessage.PlaySound -> Unit
                 is ErinomeMessage.LoadModule -> erinomeInjector.loadModule(webView, message.source)
                 is ErinomeMessage.ShellTab -> handleShellTab(message.tab)
+                is ErinomeMessage.NativeSnapshot -> renderNativeReplicaSnapshot(message.snapshot)
                 is ErinomeMessage.WebRequest -> handleWebRequest(message, sourceOrigin)
             }
         }
@@ -152,6 +167,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleInternalPageFinished(url: String) {
         updateQuickActionVisibility(url)
+        installNativeReplicaBridge(url)
         pendingShellTab.consumeFor(url)
             ?.let { tabName -> NativeTab.entries.firstOrNull { it.bridgeName == tabName } }
             ?.let { tab ->
@@ -160,6 +176,27 @@ class MainActivity : AppCompatActivity() {
                     TAB_ACTION_DELAY_MS,
                 )
             }
+    }
+
+    private fun installNativeReplicaBridge(url: String) {
+        if (!PendingShellTab.isSuperheroUrl(url)) {
+            nativeStatusBar.visibility = View.GONE
+            nativeLoggerScroll.visibility = View.GONE
+            return
+        }
+        val bridgeGeneration = pageGeneration
+        webView.postDelayed(
+            {
+                if (
+                    !isDestroyed &&
+                    bridgeGeneration == pageGeneration &&
+                    webView.url?.let(PendingShellTab::isSuperheroUrl) == true
+                ) {
+                    webView.evaluateJavascript(GodvilleShellScripts.installNativeReplicaBridge(), null)
+                }
+            },
+            NATIVE_REPLICA_BRIDGE_DELAY_MS,
+        )
     }
 
     private fun handleWebRequest(request: ErinomeMessage.WebRequest, sourceOrigin: String) {
@@ -241,6 +278,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bindNativeTabs() {
+        bindNativeReplicaViews()
+        shellAccentColor = ContextCompat.getColor(this, R.color.shell_accent)
         nativeTabButtons = NativeTab.entries.associateWith { tab ->
             findViewById<Button>(tab.buttonId).apply {
                 setOnClickListener { selectNativeTab(tab) }
@@ -283,6 +322,60 @@ class MainActivity : AppCompatActivity() {
         }
         updateNativeTabSelection(NativeTab.PULT)
         updateQuickActionVisibility()
+    }
+
+    private fun bindNativeReplicaViews() {
+        nativeStatusBar = findViewById(R.id.nativeStatusBar)
+        nativeStatusHp = findViewById(R.id.nativeStatusHp)
+        nativeStatusGp = findViewById(R.id.nativeStatusGp)
+        nativeStatusInv = findViewById(R.id.nativeStatusInv)
+        nativeStatusGold = findViewById(R.id.nativeStatusGold)
+        nativeLoggerScroll = findViewById(R.id.nativeLoggerScroll)
+        nativeUiPlusLogger = findViewById(R.id.nativeUiPlusLogger)
+    }
+
+    private fun renderNativeReplicaSnapshot(snapshot: NativeReplicaSnapshot) {
+        nativeStatusBar.visibility = View.VISIBLE
+        nativeStatusHp.text = statusText("♥", snapshot.status.hp)
+        nativeStatusGp.text = statusText("✺", snapshot.status.godpower)
+        nativeStatusInv.text = statusText("♙", snapshot.status.inventory)
+        nativeStatusGold.text = statusText("≋", snapshot.status.gold)
+
+        nativeUiPlusLogger.removeAllViews()
+        if (!snapshot.logger.visible || snapshot.logger.segments.isEmpty()) {
+            nativeLoggerScroll.visibility = View.GONE
+            return
+        }
+
+        snapshot.logger.segments.forEach { segment ->
+            val segmentView = TextView(this).apply {
+                text = " ${segment.text}"
+                setTextColor(runCatching { Color.parseColor(segment.color) }.getOrDefault(Color.LTGRAY))
+                textSize = 13f
+                gravity = Gravity.CENTER_VERTICAL
+                includeFontPadding = false
+                isSingleLine = true
+                typeface = Typeface.defaultFromStyle(if (segment.bold) Typeface.BOLD else Typeface.NORMAL)
+                contentDescription = segment.title
+            }
+            nativeUiPlusLogger.addView(
+                segmentView,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                ),
+            )
+        }
+        nativeLoggerScroll.visibility = View.VISIBLE
+        nativeLoggerScroll.post { nativeLoggerScroll.fullScroll(View.FOCUS_RIGHT) }
+    }
+
+    private fun statusText(icon: String, value: String?): CharSequence {
+        if (value.isNullOrBlank()) return ""
+        val text = "$icon\uFE0E $value"
+        return SpannableString(text).apply {
+            setSpan(ForegroundColorSpan(shellAccentColor), 0, icon.length + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
     }
 
     private fun selectNativeTab(tab: NativeTab) {
@@ -414,6 +507,7 @@ class MainActivity : AppCompatActivity() {
         private const val MENU_OFF = 5
         private const val MENU_ABOUT = 6
         private const val TAB_ACTION_DELAY_MS = 250L
+        private const val NATIVE_REPLICA_BRIDGE_DELAY_MS = 450L
         private val ALLOWED_BRIDGE_ORIGINS = setOf(
             "https://godville.net",
             "https://b.godville.net",

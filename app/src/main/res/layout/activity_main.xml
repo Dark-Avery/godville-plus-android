@@ -74,6 +74,81 @@
             </LinearLayout>
         </HorizontalScrollView>
 
+        <LinearLayout
+            android:id="@+id/nativeStatusBar"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:background="#383838"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:id="@+id/nativeStatusHp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1.1"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:textColor="@color/shell_text_secondary"
+                android:textSize="16sp"
+                tools:text="♥ 468/508" />
+
+            <TextView
+                android:id="@+id/nativeStatusGp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:textColor="@color/shell_text_secondary"
+                android:textSize="16sp"
+                tools:text="✺ 100%" />
+
+            <TextView
+                android:id="@+id/nativeStatusInv"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical|end"
+                android:singleLine="true"
+                android:textColor="@color/shell_text_secondary"
+                android:textSize="16sp"
+                tools:text="⚱ 7/50" />
+
+            <TextView
+                android:id="@+id/nativeStatusGold"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical|end"
+                android:singleLine="true"
+                android:textColor="@color/shell_text_secondary"
+                android:textSize="16sp"
+                tools:text="≋ 765" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/nativeLoggerScroll"
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:background="#383838"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/nativeUiPlusLogger"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
