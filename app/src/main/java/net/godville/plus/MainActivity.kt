@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
@@ -26,6 +27,7 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -88,6 +90,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativePultRestorePrana: Button
     private lateinit var nativePultChargeButton: Button
     private lateinit var nativePultBlessing: TextView
+    private lateinit var nativeDiaryPanel: ScrollView
+    private lateinit var nativeDiaryContent: LinearLayout
+    private lateinit var nativeGenericPanel: ScrollView
+    private lateinit var nativeGenericContent: LinearLayout
     private var shellAccentColor: Int = Color.CYAN
     private val webRequestExecutor = ErinomeWebRequestExecutor()
     private val webRequestThread = Executors.newSingleThreadExecutor()
@@ -212,6 +218,8 @@ class MainActivity : AppCompatActivity() {
             nativeStatusBar.visibility = View.GONE
             nativeLoggerScroll.visibility = View.GONE
             nativePultPanel.visibility = View.GONE
+            nativeDiaryPanel.visibility = View.GONE
+            nativeGenericPanel.visibility = View.GONE
             return
         }
         val bridgeGeneration = pageGeneration
@@ -391,6 +399,10 @@ class MainActivity : AppCompatActivity() {
         nativePultRestorePrana = findViewById(R.id.nativePultRestorePrana)
         nativePultChargeButton = findViewById(R.id.nativePultChargeButton)
         nativePultBlessing = findViewById(R.id.nativePultBlessing)
+        nativeDiaryPanel = findViewById(R.id.nativeDiaryPanel)
+        nativeDiaryContent = findViewById(R.id.nativeDiaryContent)
+        nativeGenericPanel = findViewById(R.id.nativeGenericPanel)
+        nativeGenericContent = findViewById(R.id.nativeGenericContent)
 
         nativeVoiceSubmit.setOnClickListener {
             webView.evaluateJavascript(
@@ -416,6 +428,8 @@ class MainActivity : AppCompatActivity() {
         nativeStatusInv.text = statusText("♙", snapshot.status.inventory)
         nativeStatusGold.text = statusText("≋", snapshot.status.gold)
         renderNativePult(snapshot.pult)
+        renderNativeDiary(snapshot.page)
+        renderNativeGenericPage(snapshot.page)
 
         nativeUiPlusLogger.removeAllViews()
         nativeLoggerScroll.visibility = View.GONE
@@ -447,6 +461,310 @@ class MainActivity : AppCompatActivity() {
             ?.takeUnless { it.equals("Зарядить", ignoreCase = true) }
             ?: "Зарядить аккумулятор"
     }
+
+    private fun renderNativeDiary(page: NativePage) {
+        if (selectedTab != NativeTab.DIARY || page.diaryRows.isEmpty()) {
+            nativeDiaryPanel.visibility = View.GONE
+            return
+        }
+        nativeGenericPanel.visibility = View.GONE
+        nativeDiaryContent.removeAllViews()
+        renderDiaryActivityHeader(page)
+        renderDiaryTitle(page.title ?: "Дневник героя")
+        page.diaryRows.forEach { row -> renderDiaryRow(row) }
+        nativeDiaryPanel.visibility = View.VISIBLE
+    }
+
+    private fun renderNativeGenericPage(page: NativePage) {
+        if (selectedTab == NativeTab.PULT || selectedTab == NativeTab.DIARY || page.lines.isEmpty()) {
+            nativeGenericPanel.visibility = View.GONE
+            return
+        }
+        nativeDiaryPanel.visibility = View.GONE
+        nativeGenericContent.removeAllViews()
+        val lines = trimGenericPageChrome(page.lines)
+        if (selectedTab == NativeTab.HERO) {
+            renderNativeHeroPage(lines)
+            nativeGenericPanel.visibility = View.VISIBLE
+            return
+        }
+        var index = 0
+        while (index < lines.size) {
+            val line = lines[index]
+            val next = lines.getOrNull(index + 1)
+            when {
+                isGenericHeader(line) -> {
+                    renderGenericHeader(line)
+                    index += 1
+                }
+                next != null && isLikelyValueLine(next) && !isGenericHeader(next) -> {
+                    renderGenericKeyValue(line, next)
+                    index += 2
+                }
+                else -> {
+                    renderGenericLine(line)
+                    index += 1
+                }
+            }
+        }
+        nativeGenericPanel.visibility = View.VISIBLE
+    }
+
+    private fun renderNativeHeroPage(lines: List<String>) {
+        var index = 0
+        while (index < lines.size) {
+            val line = normalizeHeroLabel(lines[index])
+            when {
+                isGenericHeader(line) -> {
+                    renderGenericHeader(line)
+                    index += 1
+                }
+                isIgnoredHeroLine(line) -> {
+                    index += 1
+                }
+                HERO_FIELD_LABELS.contains(line) -> {
+                    val valueIndex = if (line in HERO_FIELDS_ALLOW_ACTION_SKIP) {
+                        (index + 1 until lines.size).firstOrNull { candidate ->
+                            val value = normalizeHeroLabel(lines[candidate])
+                            !isIgnoredHeroLine(value) && !HERO_FIELD_LABELS.contains(value) && !isGenericHeader(value)
+                        }
+                    } else {
+                        (index + 1).takeIf { candidate ->
+                            candidate < lines.size &&
+                                normalizeHeroLabel(lines[candidate]).let { value ->
+                                    !isIgnoredHeroLine(value) && !HERO_FIELD_LABELS.contains(value) && !isGenericHeader(value)
+                                }
+                        }
+                    }
+                    if (valueIndex != null) {
+                        renderGenericKeyValue(line, normalizeHeroLabel(lines[valueIndex]))
+                        index = valueIndex + 1
+                    } else {
+                        renderGenericLine(line)
+                        index += 1
+                    }
+                }
+                else -> {
+                    renderGenericLine(line)
+                    index += 1
+                }
+            }
+        }
+    }
+
+    private fun normalizeHeroLabel(line: String): String =
+        line.removeSuffix("✎").trim()
+
+    private fun isIgnoredHeroLine(line: String): Boolean =
+        line in setOf("учись", "лечись", "делай", "отмени", "воскреснуть", "продать", "выкинуть")
+
+    private fun trimGenericPageChrome(lines: List<String>): List<String> {
+        val start = when (selectedTab) {
+            NativeTab.HERO -> lines.indexOfFirst { it.equals("Данные героя", ignoreCase = true) }
+            NativeTab.ITEMS -> lines.indexOfFirst { it.equals("Снаряжение", ignoreCase = true) || it.equals("Инвентарь", ignoreCase = true) }
+            NativeTab.FRIENDS -> lines.indexOfFirst { it.equals("Союзники", ignoreCase = true) || it.equals("Соратники", ignoreCase = true) }
+            NativeTab.PANTHEONS -> lines.indexOfFirst { it.contains("пантеон", ignoreCase = true) }
+            else -> -1
+        }
+        return (if (start >= 0) lines.drop(start) else lines)
+            .filterNot { it == "▸" || it == "›" || it == "▼" }
+            .take(90)
+    }
+
+    private fun isGenericHeader(line: String): Boolean =
+        line in setOf(
+            "Данные героя",
+            "Питомец",
+            "Снаряжение",
+            "Инвентарь",
+            "Союзники",
+            "Соратники",
+            "Противники",
+            "Друзья",
+            "Пантеоны",
+            "Личные",
+            "Общие",
+        ) || line.endsWith("пантеон", ignoreCase = true)
+
+    private fun isLikelyValueLine(line: String): Boolean =
+        line.length <= 80 &&
+            (
+                line.contains("/") ||
+                    line.contains("%") ||
+                    line.contains("№") ||
+                    line.contains("тысяч") ||
+                    line.matches(Regex("""\d+.*""")) ||
+                    line.contains(" → ") ||
+                    line.contains("(") ||
+                    line.contains(")")
+            )
+
+    private fun renderGenericHeader(title: String) {
+        nativeGenericContent.addView(
+            TextView(this).apply {
+                text = title
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                textSize = 16f
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER_VERTICAL or Gravity.START
+                setPadding(11.dpInt(), 13.dpInt(), 11.dpInt(), 8.dpInt())
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        )
+    }
+
+    private fun renderGenericKeyValue(label: String, value: String) {
+        nativeGenericContent.addView(
+            LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(11.dpInt(), 8.dpInt(), 11.dpInt(), 8.dpInt())
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = label
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                        textSize = 14f
+                        setTypeface(null, Typeface.BOLD)
+                    },
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 0.9f),
+                )
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = value
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                        textSize = 14f
+                        gravity = Gravity.END
+                    },
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.1f),
+                )
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        )
+        nativeGenericContent.addView(divider())
+    }
+
+    private fun renderGenericLine(line: String) {
+        nativeGenericContent.addView(
+            TextView(this).apply {
+                text = line
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                textSize = 14f
+                setPadding(11.dpInt(), 8.dpInt(), 11.dpInt(), 8.dpInt())
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        )
+        nativeGenericContent.addView(divider())
+    }
+
+    private fun renderDiaryActivityHeader(page: NativePage) {
+        val title = page.activityTitle?.takeIf { it.isNotBlank() }
+        val subtitle = page.activitySubtitle?.takeIf { it.isNotBlank() }
+        if (title == null && subtitle == null && page.progress == null) return
+
+        if (title != null) {
+            nativeDiaryContent.addView(
+                TextView(this).apply {
+                    text = title
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                    textSize = 15f
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER_VERTICAL or Gravity.START
+                    setPadding(11.dpInt(), 0, 11.dpInt(), 0)
+                },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 36.dpInt()),
+            )
+        }
+        if (subtitle != null) {
+            nativeDiaryContent.addView(
+                TextView(this).apply {
+                    text = subtitle
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                    textSize = 14f
+                    gravity = Gravity.CENTER
+                    setPadding(11.dpInt(), 0, 11.dpInt(), 0)
+                    maxLines = 2
+                },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 47.dpInt()),
+            )
+        }
+        nativeDiaryContent.addView(
+            ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                max = 100
+                progress = page.progress ?: 0
+                progressTintList = android.content.res.ColorStateList.valueOf(shellAccentColor)
+                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.DKGRAY)
+                setPadding(11.dpInt(), 0, 11.dpInt(), 0)
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 6.dpInt()),
+        )
+    }
+
+    private fun renderDiaryTitle(title: String) {
+        nativeDiaryContent.addView(
+            LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(11.dpInt(), 0, 11.dpInt(), 0)
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = title
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                        textSize = 16f
+                        setTypeface(null, Typeface.BOLD)
+                    },
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f),
+                )
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = "⚖  ☥"
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_secondary))
+                        textSize = 18f
+                        gravity = Gravity.CENTER_VERTICAL or Gravity.END
+                    },
+                    LinearLayout.LayoutParams(120.dpInt(), ViewGroup.LayoutParams.MATCH_PARENT),
+                )
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 40.dpInt()),
+        )
+        nativeDiaryContent.addView(divider())
+    }
+
+    private fun renderDiaryRow(row: NativeDiaryRow) {
+        nativeDiaryContent.addView(
+            LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.TOP
+                setPadding(0, 8.dpInt(), 0, 8.dpInt())
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = row.time
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_secondary))
+                        textSize = 14f
+                        gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                    },
+                    LinearLayout.LayoutParams(55.dpInt(), ViewGroup.LayoutParams.WRAP_CONTENT),
+                )
+                addView(
+                    TextView(this@MainActivity).apply {
+                        text = row.text
+                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
+                        textSize = 14f
+                        setLineSpacing(0f, 1.05f)
+                        setPadding(0, 0, 11.dpInt(), 0)
+                    },
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f),
+                )
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        )
+        nativeDiaryContent.addView(divider())
+    }
+
+    private fun divider(): View =
+        View(this).apply {
+            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.shell_divider))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1)
+        }
 
     private fun statusText(icon: String, value: String?): CharSequence {
         if (value.isNullOrBlank()) return ""
@@ -516,6 +834,16 @@ class MainActivity : AppCompatActivity() {
     private fun updateNativeReplicaPanelVisibility(url: String? = webView.url) {
         val showPultPanel = selectedTab == NativeTab.PULT && url?.let(PendingShellTab::isSuperheroUrl) == true
         nativePultPanel.visibility = if (showPultPanel) View.VISIBLE else View.GONE
+        if (selectedTab != NativeTab.DIARY || url?.let(PendingShellTab::isSuperheroUrl) != true) {
+            nativeDiaryPanel.visibility = View.GONE
+        }
+        if (
+            selectedTab == NativeTab.PULT ||
+            selectedTab == NativeTab.DIARY ||
+            url?.let(PendingShellTab::isSuperheroUrl) != true
+        ) {
+            nativeGenericPanel.visibility = View.GONE
+        }
     }
 
     private fun scrollTabIntoView(tab: Button) {
@@ -593,6 +921,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun Float.dp(): Int = (this * resources.displayMetrics.density).toInt()
+
+    private fun Int.dpInt(): Int = (this * resources.displayMetrics.density).toInt()
 
     private fun runRemoteAction(selector: String) {
         hideMiniRemote()
@@ -680,6 +1010,29 @@ class MainActivity : AppCompatActivity() {
         FRIENDS(R.id.tabFriends, "friends", listOf("Друзья", "ДРУЗЬЯ", "Союзники", "Соратники")),
         PANTHEONS(R.id.tabPantheons, "pantheons", listOf("Пантеоны", "ПАНТЕОНЫ"));
     }
+
+    private val HERO_FIELD_LABELS = setOf(
+        "Имя бога",
+        "Имя героя",
+        "Имя",
+        "Возраст",
+        "Девиз",
+        "Характер",
+        "Гильдия",
+        "Уровень",
+        "Задание",
+        "Твари по паре",
+        "Сбережения",
+        "Золотых",
+        "Дуэли",
+        "Убито монстров",
+        "Смертей",
+        "Вид",
+        "Подряд",
+        "Здоровье",
+    )
+
+    private val HERO_FIELDS_ALLOW_ACTION_SKIP = setOf("Задание")
 
     private enum class GodvilleMenuItem(val title: String) {
         SETTINGS("Настройки"),

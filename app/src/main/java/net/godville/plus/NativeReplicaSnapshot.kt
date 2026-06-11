@@ -7,12 +7,16 @@ data class NativeReplicaSnapshot(
     val status: NativeStatus,
     val logger: NativeLogger,
     val pult: NativePult,
+    val page: NativePage,
 ) {
     companion object {
-        private const val MAX_PAYLOAD_LENGTH = 32 * 1024
+        private const val MAX_PAYLOAD_LENGTH = 64 * 1024
         private const val MAX_STATUS_TEXT_LENGTH = 32
         private const val MAX_LOGGER_SEGMENTS = 32
         private const val MAX_LOGGER_TEXT_LENGTH = 64
+        private const val MAX_PAGE_TEXT_LENGTH = 220
+        private const val MAX_DIARY_ROWS = 40
+        private const val MAX_PAGE_LINES = 120
         private const val MAX_SELECTOR_LENGTH = 256
         private const val DEFAULT_LOGGER_COLOR = "#A7A9B0"
 
@@ -22,6 +26,7 @@ data class NativeReplicaSnapshot(
             val statusJson = json.getAsJsonObjectOrNull("status")
             val loggerJson = json.getAsJsonObjectOrNull("logger")
             val pultJson = json.getAsJsonObjectOrNull("pult")
+            val pageJson = json.getAsJsonObjectOrNull("page")
 
             return NativeReplicaSnapshot(
                 status = NativeStatus(
@@ -66,6 +71,36 @@ data class NativeReplicaSnapshot(
                     badAvailable = pultJson?.boolean("badAvailable", false) ?: false,
                     miracleAvailable = pultJson?.boolean("miracleAvailable", false) ?: false,
                 ),
+                page = NativePage(
+                    title = pageJson?.boundedText("title", MAX_PAGE_TEXT_LENGTH),
+                    activityTitle = pageJson?.boundedText("activityTitle", MAX_PAGE_TEXT_LENGTH),
+                    activitySubtitle = pageJson?.boundedText("activitySubtitle", MAX_PAGE_TEXT_LENGTH),
+                    progress = pageJson?.int("progress")?.coerceIn(0, 100),
+                    lines = pageJson
+                        ?.getAsJsonArrayOrNull("lines")
+                        ?.take(MAX_PAGE_LINES)
+                        ?.mapNotNull { element ->
+                            runCatching { element.asString }.getOrNull()
+                                ?.trim()
+                                ?.take(MAX_PAGE_TEXT_LENGTH)
+                                ?.takeIf { it.isNotBlank() }
+                        }
+                        .orEmpty(),
+                    diaryRows = pageJson
+                        ?.getAsJsonArrayOrNull("diaryRows")
+                        ?.take(MAX_DIARY_ROWS)
+                        ?.mapNotNull { element ->
+                            val row = runCatching { element.asJsonObject }.getOrNull() ?: return@mapNotNull null
+                            val time = row.boundedText("time", MAX_STATUS_TEXT_LENGTH)
+                                ?.takeIf { DIARY_TIME.matches(it) }
+                                ?: return@mapNotNull null
+                            val text = row.boundedText("text", MAX_PAGE_TEXT_LENGTH)
+                                ?.takeIf { it.isNotBlank() }
+                                ?: return@mapNotNull null
+                            NativeDiaryRow(time = time, text = text)
+                        }
+                        .orEmpty(),
+                ),
             )
         }
 
@@ -77,6 +112,9 @@ data class NativeReplicaSnapshot(
 
         private fun JsonObject.boolean(name: String, default: Boolean): Boolean =
             runCatching { get(name)?.asBoolean }.getOrNull() ?: default
+
+        private fun JsonObject.int(name: String): Int? =
+            runCatching { get(name)?.takeUnless { it.isJsonNull }?.asInt }.getOrNull()
 
         private fun JsonObject.color(name: String, default: String): String {
             val value = boundedText(name, 16) ?: return default
@@ -101,6 +139,7 @@ data class NativeReplicaSnapshot(
         }
 
         private val HEX_COLOR = Regex("^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$")
+        private val DIARY_TIME = Regex("""\d{2}:\d{2}""")
     }
 }
 
@@ -142,4 +181,18 @@ data class NativePult(
 data class NativePultAction(
     val text: String,
     val selector: String,
+)
+
+data class NativePage(
+    val title: String? = null,
+    val activityTitle: String? = null,
+    val activitySubtitle: String? = null,
+    val progress: Int? = null,
+    val lines: List<String> = emptyList(),
+    val diaryRows: List<NativeDiaryRow> = emptyList(),
+)
+
+data class NativeDiaryRow(
+    val time: String,
+    val text: String,
 )

@@ -385,6 +385,38 @@
                 </LinearLayout>
             </ScrollView>
 
+            <ScrollView
+                android:id="@+id/nativeDiaryPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="28dp"
+                android:background="@color/shell_background"
+                android:fillViewport="false"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/nativeDiaryContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+
+            <ScrollView
+                android:id="@+id/nativeGenericPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="28dp"
+                android:background="@color/shell_background"
+                android:fillViewport="false"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/nativeGenericContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+
             <ListView
                 android:id="@+id/nativeMenuList"
                 android:layout_width="match_parent"

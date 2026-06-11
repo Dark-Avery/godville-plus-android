@@ -31,6 +31,8 @@ class GodvilleShellScriptsTest {
         assertTrue(script.contains(".e_sb_hero_hp"))
         assertTrue(script.contains(".e_sb_hero_inventory"))
         assertTrue(script.contains("restorePranaAction"))
+        assertTrue(script.contains("collectDiaryPage"))
+        assertTrue(script.contains("diaryRows"))
         assertTrue(script.contains("nativeSnapshot"))
         assertTrue(script.contains("GodvillePlus.postMessage"))
     }

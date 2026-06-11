@@ -103,8 +103,40 @@ class NativeReplicaSnapshotTest {
     }
 
     @Test
+    fun decodesDiaryPageSnapshot() {
+        val snapshot = NativeReplicaSnapshot.decode(
+            """
+            {
+              "page": {
+                "title": "Дневник героя",
+                "activityTitle": "Рыбалка на 129-м столбе",
+                "activitySubtitle": "Куда ни кинь — всюду линь...",
+                "progress": 7,
+                "lines": ["Данные героя", "Имя героя", "Маахан"],
+                "diaryRows": [
+                  {"time":"03:39","text":"Интересно, насколько глубок этот пруд?"},
+                  {"time":"03:36","text":"Перечитывая дневник, герой задумался."},
+                  {"time":"bad","text":"эта строка не должна попасть в модель"}
+                ]
+              },
+              "logger": {"visible": false, "segments": []}
+            }
+            """.trimIndent(),
+        )
+
+        requireNotNull(snapshot)
+        assertEquals("Дневник героя", snapshot.page.title)
+        assertEquals("Рыбалка на 129-м столбе", snapshot.page.activityTitle)
+        assertEquals("Куда ни кинь — всюду линь...", snapshot.page.activitySubtitle)
+        assertEquals(7, snapshot.page.progress)
+        assertEquals(listOf("Данные героя", "Имя героя", "Маахан"), snapshot.page.lines)
+        assertEquals(2, snapshot.page.diaryRows.size)
+        assertEquals(NativeDiaryRow("03:39", "Интересно, насколько глубок этот пруд?"), snapshot.page.diaryRows[0])
+    }
+
+    @Test
     fun rejectsInvalidAndOversizedPayloads() {
         assertNull(NativeReplicaSnapshot.decode("not json"))
-        assertNull(NativeReplicaSnapshot.decode("x".repeat(32 * 1024 + 1)))
+        assertNull(NativeReplicaSnapshot.decode("x".repeat(64 * 1024 + 1)))
     }
 }

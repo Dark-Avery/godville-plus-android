@@ -64,7 +64,7 @@ object GodvilleShellScripts {
 
     fun installNativeReplicaBridge(): String = """
         (function() {
-          const BRIDGE_VERSION = 'native-replica-pult-3';
+          const BRIDGE_VERSION = 'native-replica-page-6';
           if (window.__godvillePlusNativeReplicaBridgeVersion === BRIDGE_VERSION) return 'already';
           if (!window.GodvillePlus || !window.GodvillePlus.postMessage) return 'missing-bridge';
           if (window.__godvillePlusNativeReplicaBridgeObserver) {
@@ -208,12 +208,80 @@ object GodvilleShellScripts {
             };
           }
 
+          function isVisible(node) {
+            const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode;
+            if (!element) return false;
+            if (element.closest('#statusbar, #tabbar, #cntrl, #cntrl2, script, style, noscript')) return false;
+            const style = window.getComputedStyle(element);
+            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+            return true;
+          }
+
+          function visibleTextNodes() {
+            return String((document.body || document.documentElement).innerText || '')
+              .split(/\n+/)
+              .map(function(value) { return text(value, MAX_TEXT_LENGTH * 4); })
+              .filter(function(value) { return value.length > 0; });
+          }
+
+          function collectDiaryPage() {
+            const values = visibleTextNodes();
+            const diaryTitleIndex = values.findIndex(function(value, index) {
+              return index > 2 && /^(?:Дневник|Дневник героя|Diary)$/.test(value);
+            });
+            const startIndex = diaryTitleIndex >= 0 ? diaryTitleIndex + 1 : 0;
+            const beforeTitle = diaryTitleIndex >= 0 ? values.slice(0, diaryTitleIndex) : [];
+            const filteredBeforeTitle = beforeTitle.filter(function(value) {
+              return !/^\d{1,3}%$/.test(value) &&
+                !/^\d+\s*\/\s*\d+$/.test(value) &&
+                !/(?:^|\s)[a-z]{2,6}\d*[+\u2212-]\d+/i.test(value) &&
+                !/^(?:ПУЛЬТ|ДНЕВНИК|ГЕРОЙ|ВЕЩИ|ДРУЗЬЯ|ПАНТЕОНЫ)$/.test(value) &&
+                !/^[|+\-\w:;% ]+$/.test(value);
+            });
+            const activityTitle = filteredBeforeTitle[0] || null;
+            const activitySubtitle = filteredBeforeTitle.length > 1 ? filteredBeforeTitle[filteredBeforeTitle.length - 1] : null;
+            const progressMatch = values.join(' ').match(/прогресс\s*[—-]\s*(\d+)%/i);
+            const pageLines = values.filter(function(value) {
+              return !/^\d{1,3}%$/.test(value) &&
+                !/^\d+\s*\/\s*\d+$/.test(value) &&
+                !/(?:^|\s)[a-z]{2,6}\d*[+\u2212-]\d+/i.test(value) &&
+                !/^(?:ПУЛЬТ|ДНЕВНИК|ГЕРОЙ|ВЕЩИ|ДРУЗЬЯ|ПАНТЕОНЫ)$/.test(value) &&
+                !/^[|+\-\w:;% ]+$/.test(value);
+            }).slice(0, 120);
+            const rows = [];
+            let current = null;
+            for (let i = startIndex; i < values.length && rows.length < 40; i++) {
+              const value = values[i];
+              const combined = value.match(/^(\d{2}:\d{2})\s+(.+)$/);
+              const standaloneTime = value.match(/^(\d{2}:\d{2})$/);
+              if (combined) {
+                if (current && current.text) rows.push(current);
+                current = { time: combined[1], text: combined[2] };
+              } else if (standaloneTime) {
+                if (current && current.text) rows.push(current);
+                current = { time: standaloneTime[1], text: '' };
+              } else if (current && value !== 'Показать важнейшие события из жизни героя (Alt+T)') {
+                current.text = text((current.text ? current.text + ' ' : '') + value, MAX_TEXT_LENGTH * 4);
+              }
+            }
+            if (current && current.text && rows.length < 40) rows.push(current);
+            return {
+              title: 'Дневник героя',
+              activityTitle: activityTitle,
+              activitySubtitle: activitySubtitle && activitySubtitle !== activityTitle ? activitySubtitle : null,
+              progress: progressMatch ? parseInt(progressMatch[1], 10) : null,
+              lines: pageLines,
+              diaryRows: rows
+            };
+          }
+
           function sendSnapshot() {
             raf = 0;
             const snapshot = {
               status: collectStatus(),
               logger: collectLogger(),
-              pult: collectPult()
+              pult: collectPult(),
+              page: collectDiaryPage()
             };
             window.GodvillePlus.postMessage(JSON.stringify({
               type: 'nativeSnapshot',
