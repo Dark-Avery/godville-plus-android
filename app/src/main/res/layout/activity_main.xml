@@ -427,7 +427,8 @@
             android:layout_marginBottom="171dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_miracle"
-            android:padding="10dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_mini_miracle" />
 
         <TextView
@@ -452,7 +453,8 @@
             android:layout_marginBottom="183dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_restore_prana"
-            android:padding="10dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_mini_charge"
             android:visibility="gone" />
 
@@ -479,7 +481,8 @@
             android:layout_marginBottom="139dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_bad"
-            android:padding="10dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_mini_bad" />
 
         <TextView
@@ -504,7 +507,8 @@
             android:layout_marginBottom="90dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_voice"
-            android:padding="10dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_mini_voice" />
 
         <TextView
@@ -529,7 +533,8 @@
             android:layout_marginBottom="33dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_good"
-            android:padding="10dp"
+            android:padding="5dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_mini_good" />
 
         <TextView

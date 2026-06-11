@@ -1,14 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="28dp"
-    android:height="28dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:width="45dp"
+    android:height="45dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <group
+        android:pivotX="16"
+        android:pivotY="16">
+        <path
+            android:fillColor="@android:color/transparent"
+            android:pathData="M3,16 C3,13.5 8.8,11.4 16,11.4 C23.2,11.4 29,13.5 29,16 C29,18.5 23.2,20.6 16,20.6 C8.8,20.6 3,18.5 3,16"
+            android:strokeColor="@color/shell_text_primary"
+            android:strokeLineCap="round"
+            android:strokeWidth="1.6" />
+    </group>
+    <group
+        android:pivotX="16"
+        android:pivotY="16"
+        android:rotation="60">
+        <path
+            android:fillColor="@android:color/transparent"
+            android:pathData="M3,16 C3,13.5 8.8,11.4 16,11.4 C23.2,11.4 29,13.5 29,16 C29,18.5 23.2,20.6 16,20.6 C8.8,20.6 3,18.5 3,16"
+            android:strokeColor="@color/shell_text_primary"
+            android:strokeLineCap="round"
+            android:strokeWidth="1.6" />
+    </group>
+    <group
+        android:pivotX="16"
+        android:pivotY="16"
+        android:rotation="-60">
+        <path
+            android:fillColor="@android:color/transparent"
+            android:pathData="M3,16 C3,13.5 8.8,11.4 16,11.4 C23.2,11.4 29,13.5 29,16 C29,18.5 23.2,20.6 16,20.6 C8.8,20.6 3,18.5 3,16"
+            android:strokeColor="@color/shell_text_primary"
+            android:strokeLineCap="round"
+            android:strokeWidth="1.6" />
+    </group>
     <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M12,4 A8,3.2 0,1 0,12,20 A8,3.2 0,1 0,12,4 M4,12 A8,3.2 60,1 0,20,12 A8,3.2 60,1 0,4,12 M4,12 A8,3.2 -60,1 0,20,12 A8,3.2 -60,1 0,4,12"
-        android:strokeColor="@color/shell_text_primary"
-        android:strokeLineCap="round"
-        android:strokeWidth="1.5" />
-    <path android:fillColor="@color/shell_text_primary" android:pathData="M12,10.5 a1.5,1.5 0,1 0,0.1,0" />
+        android:fillColor="@color/shell_text_primary"
+        android:pathData="M16,13.6 a2.4,2.4 0,1 0,0.1,0" />
 </vector>

@@ -546,19 +546,19 @@ class MainActivity : AppCompatActivity() {
         miniRemoteRestorePranaLabel.visibility = restoreVisibility
         if (useFiveActionLayout) {
             applyMiniRemoteLayout(
-                miracle = MiniRemotePosition(endDp = 73f, bottomDp = 154f, labelEndDp = 89f, labelBottomDp = 159f),
-                bad = MiniRemotePosition(endDp = 121f, bottomDp = 121f, labelEndDp = 134f, labelBottomDp = 126f),
-                voice = MiniRemotePosition(endDp = 154f, bottomDp = 73f, labelEndDp = 172f, labelBottomDp = 78f),
-                good = MiniRemotePosition(endDp = 165f, bottomDp = 16f, labelEndDp = 175f, labelBottomDp = 21f),
-                restore = MiniRemotePosition(endDp = 16f, bottomDp = 165f, labelEndDp = 30f, labelBottomDp = 170f),
+                miracle = MiniRemotePosition(endDp = 83.2f, bottomDp = 175f, labelEndDp = 89.6f, labelBottomDp = 160f),
+                bad = MiniRemotePosition(endDp = 132.1f, bottomDp = 142.1f, labelEndDp = 135.4f, labelBottomDp = 127.1f),
+                voice = MiniRemotePosition(endDp = 165f, bottomDp = 93.2f, labelEndDp = 172.9f, labelBottomDp = 78.2f),
+                good = MiniRemotePosition(endDp = 176.4f, bottomDp = 35.7f, labelEndDp = 175.7f, labelBottomDp = 20.7f),
+                restore = MiniRemotePosition(endDp = 25.7f, bottomDp = 186.4f, labelEndDp = 30f, labelBottomDp = 171.4f),
             )
         } else {
             applyMiniRemoteLayout(
-                miracle = MiniRemotePosition(endDp = 16f, bottomDp = 130f, labelEndDp = 30f, labelBottomDp = 135f),
-                bad = MiniRemotePosition(endDp = 73f, bottomDp = 115f, labelEndDp = 89f, labelBottomDp = 119f),
-                voice = MiniRemotePosition(endDp = 115f, bottomDp = 73f, labelEndDp = 134f, labelBottomDp = 78f),
-                good = MiniRemotePosition(endDp = 130f, bottomDp = 16f, labelEndDp = 138f, labelBottomDp = 21f),
-                restore = MiniRemotePosition(endDp = 26f, bottomDp = 185f, labelEndDp = 30f, labelBottomDp = 170f),
+                miracle = MiniRemotePosition(endDp = 25.7f, bottomDp = 151.1f, labelEndDp = 32.1f, labelBottomDp = 136.1f),
+                bad = MiniRemotePosition(endDp = 83.2f, bottomDp = 135.7f, labelEndDp = 86.4f, labelBottomDp = 120.7f),
+                voice = MiniRemotePosition(endDp = 125.7f, bottomDp = 93.2f, labelEndDp = 133.6f, labelBottomDp = 78.2f),
+                good = MiniRemotePosition(endDp = 141.1f, bottomDp = 35.7f, labelEndDp = 140.4f, labelBottomDp = 20.7f),
+                restore = MiniRemotePosition(endDp = 25.7f, bottomDp = 186.4f, labelEndDp = 30f, labelBottomDp = 171.4f),
             )
         }
     }
@@ -659,7 +659,7 @@ class MainActivity : AppCompatActivity() {
         private const val MENU_ABOUT = 6
         private const val TAB_ACTION_DELAY_MS = 250L
         private const val NATIVE_REPLICA_BRIDGE_DELAY_MS = 450L
-        private const val MINI_REMOTE_BUTTON_DP = 65f
+        private const val MINI_REMOTE_BUTTON_DP = 45.4f
         private const val MINI_REMOTE_LABEL_HEIGHT_DP = 15f
         private val ALLOWED_BRIDGE_ORIGINS = setOf(
             "https://godville.net",
