@@ -614,6 +614,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderGenericKeyValue(label: String, value: String) {
+        val displayLabel = formatGenericLine(label)
+        val displayValue = formatGenericLine(value)
         nativeGenericContent.addView(
             LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -622,7 +624,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener { clickVisibleText(value) }
                 addView(
                     TextView(this@MainActivity).apply {
-                        text = label
+                        text = displayLabel
                         setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
                         textSize = 14f
                         setTypeface(null, Typeface.BOLD)
@@ -631,7 +633,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 addView(
                     TextView(this@MainActivity).apply {
-                        text = value
+                        text = displayValue
                         setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
                         textSize = 14f
                         gravity = Gravity.END
@@ -645,9 +647,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderGenericLine(line: String) {
+        val displayLine = formatGenericLine(line)
         nativeGenericContent.addView(
             TextView(this).apply {
-                text = line
+                text = displayLine
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
                 textSize = 14f
                 setPadding(11.dpInt(), 8.dpInt(), 11.dpInt(), 8.dpInt())
@@ -657,6 +660,13 @@ class MainActivity : AppCompatActivity() {
         )
         nativeGenericContent.addView(divider())
     }
+
+    private fun formatGenericLine(line: String): String =
+        if (selectedTab == NativeTab.FRIENDS) {
+            line.replace(Regex("""(?<=[A-Za-z0-9])(?=[А-Яа-яЁё])"""), " ")
+        } else {
+            line
+        }
 
     private fun clickVisibleText(label: String) {
         webView.evaluateJavascript(GodvilleShellScripts.clickVisibleText(label), null)

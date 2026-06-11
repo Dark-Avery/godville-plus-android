@@ -68,13 +68,14 @@ object GodvilleShellScripts {
             (function() {
               const target = String($quotedLabel || '').replace(/\s+/g, ' ').trim().toLowerCase();
               if (!target) return 'empty';
+              const targetHead = target.split(' ')[0] || target;
               const nodes = Array.from(document.querySelectorAll('a, button, [role="button"], input[type="button"], input[type="submit"]'));
               const match = nodes.find(function(node) {
                 const text = String(node.innerText || node.textContent || node.value || node.getAttribute('aria-label') || '')
                   .replace(/\s+/g, ' ')
                   .trim()
                   .toLowerCase();
-                return text && (text.includes(target) || target.includes(text));
+                return text && (text.includes(target) || target.includes(text) || text.includes(targetHead) || targetHead.includes(text));
               });
               if (!match) return 'missing';
               match.click();
