@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
@@ -19,12 +18,14 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.BaseAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.PopupMenu
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +55,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativeMenuList: ListView
     private lateinit var quickActionButton: ImageButton
     private lateinit var miniRemoteMenu: FrameLayout
+    private lateinit var miniRemoteMiracle: ImageButton
+    private lateinit var miniRemoteMiracleLabel: TextView
+    private lateinit var miniRemoteBad: ImageButton
+    private lateinit var miniRemoteBadLabel: TextView
+    private lateinit var miniRemoteVoice: ImageButton
+    private lateinit var miniRemoteVoiceLabel: TextView
+    private lateinit var miniRemoteGood: ImageButton
+    private lateinit var miniRemoteGoodLabel: TextView
+    private lateinit var miniRemoteRestorePrana: ImageButton
+    private lateinit var miniRemoteRestorePranaLabel: TextView
     private lateinit var nativeStatusBar: View
     private lateinit var nativeStatusHp: TextView
     private lateinit var nativeStatusGp: TextView
@@ -61,12 +72,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativeStatusGold: TextView
     private lateinit var nativeLoggerScroll: HorizontalScrollView
     private lateinit var nativeUiPlusLogger: LinearLayout
+    private lateinit var nativePultPanel: View
+    private lateinit var nativePultPrana: TextView
+    private lateinit var nativePultPranaProgress: ProgressBar
+    private lateinit var nativeVoiceInput: EditText
+    private lateinit var nativeVoiceSubmit: Button
+    private lateinit var nativePultGood: Button
+    private lateinit var nativePultBad: Button
+    private lateinit var nativePultMiracle: Button
+    private lateinit var nativePultArena: Button
+    private lateinit var nativePultTraining: Button
+    private lateinit var nativePultDungeon: TextView
+    private lateinit var nativePultSail: Button
+    private lateinit var nativePultCharge: TextView
+    private lateinit var nativePultRestorePrana: Button
+    private lateinit var nativePultChargeButton: Button
+    private lateinit var nativePultBlessing: TextView
     private var shellAccentColor: Int = Color.CYAN
     private val webRequestExecutor = ErinomeWebRequestExecutor()
     private val webRequestThread = Executors.newSingleThreadExecutor()
     private val pendingShellTab = PendingShellTab()
     private var pageGeneration = 0
     private var selectedTab = NativeTab.PULT
+    private var latestPult = NativePult()
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -162,6 +190,7 @@ class MainActivity : AppCompatActivity() {
         hideMiniRemote()
         hideNativeMenu()
         updateNativeTabSelection(tab)
+        updateNativeReplicaPanelVisibility()
         updateQuickActionVisibility()
     }
 
@@ -182,6 +211,7 @@ class MainActivity : AppCompatActivity() {
         if (!PendingShellTab.isSuperheroUrl(url)) {
             nativeStatusBar.visibility = View.GONE
             nativeLoggerScroll.visibility = View.GONE
+            nativePultPanel.visibility = View.GONE
             return
         }
         val bridgeGeneration = pageGeneration
@@ -303,22 +333,35 @@ class MainActivity : AppCompatActivity() {
             }
         }
         miniRemoteMenu = findViewById(R.id.miniRemoteMenu)
+        miniRemoteMiracle = findViewById(R.id.miniRemoteMiracle)
+        miniRemoteMiracleLabel = findViewById(R.id.miniRemoteMiracleLabel)
+        miniRemoteBad = findViewById(R.id.miniRemoteBad)
+        miniRemoteBadLabel = findViewById(R.id.miniRemoteBadLabel)
+        miniRemoteVoice = findViewById(R.id.miniRemoteVoice)
+        miniRemoteVoiceLabel = findViewById(R.id.miniRemoteVoiceLabel)
+        miniRemoteGood = findViewById(R.id.miniRemoteGood)
+        miniRemoteGoodLabel = findViewById(R.id.miniRemoteGoodLabel)
+        miniRemoteRestorePrana = findViewById(R.id.miniRemoteRestorePrana)
+        miniRemoteRestorePranaLabel = findViewById(R.id.miniRemoteRestorePranaLabel)
         quickActionButton = findViewById<ImageButton>(R.id.quickActionButton).apply {
             setOnClickListener { toggleMiniRemote() }
         }
-        findViewById<ImageButton>(R.id.miniRemoteVoice).setOnClickListener {
+        miniRemoteVoice.setOnClickListener {
             hideMiniRemote()
             selectNativeTab(NativeTab.PULT)
             webView.postDelayed({ webView.evaluateJavascript(GodvilleShellScripts.focusVoice(), null) }, TAB_ACTION_DELAY_MS)
         }
-        findViewById<ImageButton>(R.id.miniRemoteGood).setOnClickListener {
+        miniRemoteGood.setOnClickListener {
             runRemoteAction("#cntrl .enc_link")
         }
-        findViewById<ImageButton>(R.id.miniRemoteBad).setOnClickListener {
+        miniRemoteBad.setOnClickListener {
             runRemoteAction("#cntrl .pun_link")
         }
-        findViewById<ImageButton>(R.id.miniRemoteMiracle).setOnClickListener {
+        miniRemoteMiracle.setOnClickListener {
             runRemoteAction("#cntrl .mir_link")
+        }
+        miniRemoteRestorePrana.setOnClickListener {
+            latestPult.restorePranaAction?.selector?.let(::runRemoteAction) ?: hideMiniRemote()
         }
         updateNativeTabSelection(NativeTab.PULT)
         updateQuickActionVisibility()
@@ -332,42 +375,77 @@ class MainActivity : AppCompatActivity() {
         nativeStatusGold = findViewById(R.id.nativeStatusGold)
         nativeLoggerScroll = findViewById(R.id.nativeLoggerScroll)
         nativeUiPlusLogger = findViewById(R.id.nativeUiPlusLogger)
+        nativePultPanel = findViewById(R.id.nativePultPanel)
+        nativePultPrana = findViewById(R.id.nativePultPrana)
+        nativePultPranaProgress = findViewById(R.id.nativePultPranaProgress)
+        nativeVoiceInput = findViewById(R.id.nativeVoiceInput)
+        nativeVoiceSubmit = findViewById(R.id.nativeVoiceSubmit)
+        nativePultGood = findViewById(R.id.nativePultGood)
+        nativePultBad = findViewById(R.id.nativePultBad)
+        nativePultMiracle = findViewById(R.id.nativePultMiracle)
+        nativePultArena = findViewById(R.id.nativePultArena)
+        nativePultTraining = findViewById(R.id.nativePultTraining)
+        nativePultDungeon = findViewById(R.id.nativePultDungeon)
+        nativePultSail = findViewById(R.id.nativePultSail)
+        nativePultCharge = findViewById(R.id.nativePultCharge)
+        nativePultRestorePrana = findViewById(R.id.nativePultRestorePrana)
+        nativePultChargeButton = findViewById(R.id.nativePultChargeButton)
+        nativePultBlessing = findViewById(R.id.nativePultBlessing)
+
+        nativeVoiceSubmit.setOnClickListener {
+            webView.evaluateJavascript(
+                GodvilleShellScripts.speakVoice(nativeVoiceInput.text?.toString().orEmpty()),
+                null,
+            )
+        }
+        nativePultGood.setOnClickListener { runRemoteAction("#cntrl .enc_link") }
+        nativePultBad.setOnClickListener { runRemoteAction("#cntrl .pun_link") }
+        nativePultMiracle.setOnClickListener { runRemoteAction("#cntrl .mir_link") }
+        nativePultArena.setOnClickListener { clickPultAction(".to_arena") }
+        nativePultTraining.setOnClickListener { clickPultAction(".to_training") }
+        nativePultSail.setOnClickListener { clickPultAction(".to_sail") }
+        nativePultRestorePrana.setOnClickListener {
+            latestPult.restorePranaAction?.selector?.let(::clickPultAction)
+        }
+        nativePultChargeButton.setOnClickListener { clickPultAction(".hch_link") }
     }
 
     private fun renderNativeReplicaSnapshot(snapshot: NativeReplicaSnapshot) {
-        nativeStatusBar.visibility = View.VISIBLE
         nativeStatusHp.text = statusText("♥", snapshot.status.hp)
         nativeStatusGp.text = statusText("✺", snapshot.status.godpower)
         nativeStatusInv.text = statusText("♙", snapshot.status.inventory)
         nativeStatusGold.text = statusText("≋", snapshot.status.gold)
+        renderNativePult(snapshot.pult)
 
         nativeUiPlusLogger.removeAllViews()
-        if (!snapshot.logger.visible || snapshot.logger.segments.isEmpty()) {
-            nativeLoggerScroll.visibility = View.GONE
+        nativeLoggerScroll.visibility = View.GONE
+    }
+
+    private fun renderNativePult(pult: NativePult) {
+        if (selectedTab != NativeTab.PULT) {
+            nativePultPanel.visibility = View.GONE
             return
         }
-
-        snapshot.logger.segments.forEach { segment ->
-            val segmentView = TextView(this).apply {
-                text = " ${segment.text}"
-                setTextColor(runCatching { Color.parseColor(segment.color) }.getOrDefault(Color.LTGRAY))
-                textSize = 13f
-                gravity = Gravity.CENTER_VERTICAL
-                includeFontPadding = false
-                isSingleLine = true
-                typeface = Typeface.defaultFromStyle(if (segment.bold) Typeface.BOLD else Typeface.NORMAL)
-                contentDescription = segment.title
-            }
-            nativeUiPlusLogger.addView(
-                segmentView,
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                ),
-            )
-        }
-        nativeLoggerScroll.visibility = View.VISIBLE
-        nativeLoggerScroll.post { nativeLoggerScroll.fullScroll(View.FOCUS_RIGHT) }
+        latestPult = pult
+        updateMiniRemoteContent(pult)
+        nativePultPanel.visibility = View.VISIBLE
+        nativePultPrana.text = pult.prana.orEmpty()
+        nativePultPranaProgress.progress = pult.prana?.removeSuffix("%")?.toIntOrNull()?.coerceIn(0, 100) ?: 0
+        nativePultCharge.text = pult.charge?.let { "Зарядов в аккумуляторе: $it" }.orEmpty()
+        nativePultBlessing.text = pult.blessing.orEmpty()
+        nativePultDungeon.text = pult.dungeon.orEmpty()
+        nativePultArena.text = pult.arena?.text ?: "Отправить на арену"
+        nativePultTraining.text = pult.training?.text ?: "Послать на тренировку"
+        nativePultSail.text = pult.sail?.text ?: "Снарядить в плавание"
+        nativePultRestorePrana.text = pult.restorePranaAction
+            ?.text
+            ?.takeUnless { it.equals("Восстановить", ignoreCase = true) }
+            ?: getString(R.string.action_restore_prana)
+        nativePultRestorePrana.visibility = if (pult.restorePranaAction != null) View.VISIBLE else View.GONE
+        nativePultChargeButton.text = pult.chargeAction
+            ?.text
+            ?.takeUnless { it.equals("Зарядить", ignoreCase = true) }
+            ?: "Зарядить аккумулятор"
     }
 
     private fun statusText(icon: String, value: String?): CharSequence {
@@ -383,6 +461,7 @@ class MainActivity : AppCompatActivity() {
         hideMiniRemote()
         hideNativeMenu()
         updateNativeTabSelection(tab)
+        updateNativeReplicaPanelVisibility()
         if (webView.url?.let(PendingShellTab::isSuperheroUrl) == true) {
             webView.evaluateJavascript(GodvilleShellScripts.selectTab(tab.webSearchTerms), null)
         } else {
@@ -431,6 +510,12 @@ class MainActivity : AppCompatActivity() {
         val show = url?.let(PendingShellTab::isSuperheroUrl) == true
         quickActionButton.visibility = if (show) View.VISIBLE else View.GONE
         if (!show) hideMiniRemote()
+        updateNativeReplicaPanelVisibility(url)
+    }
+
+    private fun updateNativeReplicaPanelVisibility(url: String? = webView.url) {
+        val showPultPanel = selectedTab == NativeTab.PULT && url?.let(PendingShellTab::isSuperheroUrl) == true
+        nativePultPanel.visibility = if (showPultPanel) View.VISIBLE else View.GONE
     }
 
     private fun scrollTabIntoView(tab: Button) {
@@ -441,12 +526,73 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleMiniRemote() {
-        miniRemoteMenu.visibility = if (miniRemoteMenu.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        if (miniRemoteMenu.visibility == View.VISIBLE) {
+            miniRemoteMenu.visibility = View.GONE
+        } else {
+            updateMiniRemoteContent()
+            miniRemoteMenu.visibility = View.VISIBLE
+        }
     }
 
     private fun hideMiniRemote() {
         miniRemoteMenu.visibility = View.GONE
     }
+
+    private fun updateMiniRemoteContent(pult: NativePult = latestPult) {
+        val prana = pult.prana?.removeSuffix("%")?.toIntOrNull()
+        val useFiveActionLayout = prana != null && prana <= 50
+        val restoreVisibility = if (useFiveActionLayout && pult.restorePranaAction != null) View.VISIBLE else View.GONE
+        miniRemoteRestorePrana.visibility = restoreVisibility
+        miniRemoteRestorePranaLabel.visibility = restoreVisibility
+        if (useFiveActionLayout) {
+            applyMiniRemoteLayout(
+                miracle = MiniRemotePosition(endDp = 73f, bottomDp = 154f, labelEndDp = 89f, labelBottomDp = 159f),
+                bad = MiniRemotePosition(endDp = 121f, bottomDp = 121f, labelEndDp = 134f, labelBottomDp = 126f),
+                voice = MiniRemotePosition(endDp = 154f, bottomDp = 73f, labelEndDp = 172f, labelBottomDp = 78f),
+                good = MiniRemotePosition(endDp = 165f, bottomDp = 16f, labelEndDp = 175f, labelBottomDp = 21f),
+                restore = MiniRemotePosition(endDp = 16f, bottomDp = 165f, labelEndDp = 30f, labelBottomDp = 170f),
+            )
+        } else {
+            applyMiniRemoteLayout(
+                miracle = MiniRemotePosition(endDp = 16f, bottomDp = 130f, labelEndDp = 30f, labelBottomDp = 135f),
+                bad = MiniRemotePosition(endDp = 73f, bottomDp = 115f, labelEndDp = 89f, labelBottomDp = 119f),
+                voice = MiniRemotePosition(endDp = 115f, bottomDp = 73f, labelEndDp = 134f, labelBottomDp = 78f),
+                good = MiniRemotePosition(endDp = 130f, bottomDp = 16f, labelEndDp = 138f, labelBottomDp = 21f),
+                restore = MiniRemotePosition(endDp = 26f, bottomDp = 185f, labelEndDp = 30f, labelBottomDp = 170f),
+            )
+        }
+    }
+
+    private fun applyMiniRemoteLayout(
+        miracle: MiniRemotePosition,
+        bad: MiniRemotePosition,
+        voice: MiniRemotePosition,
+        good: MiniRemotePosition,
+        restore: MiniRemotePosition,
+    ) {
+        applyMiniRemotePosition(miniRemoteMiracle, miniRemoteMiracleLabel, miracle)
+        applyMiniRemotePosition(miniRemoteBad, miniRemoteBadLabel, bad)
+        applyMiniRemotePosition(miniRemoteVoice, miniRemoteVoiceLabel, voice)
+        applyMiniRemotePosition(miniRemoteGood, miniRemoteGoodLabel, good)
+        applyMiniRemotePosition(miniRemoteRestorePrana, miniRemoteRestorePranaLabel, restore)
+    }
+
+    private fun applyMiniRemotePosition(button: ImageButton, label: TextView, position: MiniRemotePosition) {
+        val buttonParams = button.layoutParams as FrameLayout.LayoutParams
+        buttonParams.width = MINI_REMOTE_BUTTON_DP.dp()
+        buttonParams.height = MINI_REMOTE_BUTTON_DP.dp()
+        buttonParams.marginEnd = position.endDp.dp()
+        buttonParams.bottomMargin = position.bottomDp.dp()
+        button.layoutParams = buttonParams
+
+        val labelParams = label.layoutParams as FrameLayout.LayoutParams
+        labelParams.height = MINI_REMOTE_LABEL_HEIGHT_DP.dp()
+        labelParams.marginEnd = position.labelEndDp.dp()
+        labelParams.bottomMargin = position.labelBottomDp.dp()
+        label.layoutParams = labelParams
+    }
+
+    private fun Float.dp(): Int = (this * resources.displayMetrics.density).toInt()
 
     private fun runRemoteAction(selector: String) {
         hideMiniRemote()
@@ -455,6 +601,10 @@ class MainActivity : AppCompatActivity() {
             { webView.evaluateJavascript(GodvilleShellScripts.clickRemoteAction(selector), null) },
             TAB_ACTION_DELAY_MS,
         )
+    }
+
+    private fun clickPultAction(selector: String) {
+        webView.evaluateJavascript(GodvilleShellScripts.clickRemoteAction(selector), null)
     }
 
     private fun buildGodvilleMenuRows(): List<GodvilleMenuRow> =
@@ -476,6 +626,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openMenuUrl(url: String) {
         hideNativeMenu()
+        nativePultPanel.visibility = View.GONE
         webView.loadUrl(url)
     }
 
@@ -508,6 +659,8 @@ class MainActivity : AppCompatActivity() {
         private const val MENU_ABOUT = 6
         private const val TAB_ACTION_DELAY_MS = 250L
         private const val NATIVE_REPLICA_BRIDGE_DELAY_MS = 450L
+        private const val MINI_REMOTE_BUTTON_DP = 65f
+        private const val MINI_REMOTE_LABEL_HEIGHT_DP = 15f
         private val ALLOWED_BRIDGE_ORIGINS = setOf(
             "https://godville.net",
             "https://b.godville.net",
@@ -547,6 +700,13 @@ class MainActivity : AppCompatActivity() {
         data class Header(override val title: String) : GodvilleMenuRow
         data class Action(override val title: String, val onClick: () -> Unit) : GodvilleMenuRow
     }
+
+    private data class MiniRemotePosition(
+        val endDp: Float,
+        val bottomDp: Float,
+        val labelEndDp: Float,
+        val labelBottomDp: Float,
+    )
 
     private inner class GodvilleMenuAdapter(
         private val rows: List<GodvilleMenuRow>,

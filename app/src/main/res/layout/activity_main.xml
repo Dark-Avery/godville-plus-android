@@ -15,7 +15,7 @@
         <HorizontalScrollView
             android:id="@+id/nativeTopBar"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
+            android:layout_height="48dp"
             android:background="@color/shell_surface"
             android:fillViewport="false"
             android:overScrollMode="never"
@@ -30,7 +30,7 @@
                 <Button
                     android:id="@+id/appMenuButton"
                     style="@style/NativeShellTab"
-                    android:layout_width="68dp"
+                    android:layout_width="72dp"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/app_menu"
                     android:text="@string/menu_button"
@@ -39,25 +39,25 @@
                 <Button
                     android:id="@+id/tabPult"
                     style="@style/NativeShellTab"
-                    android:layout_width="68dp"
+                    android:layout_width="72dp"
                     android:text="@string/tab_pult" />
 
                 <Button
                     android:id="@+id/tabDiary"
                     style="@style/NativeShellTab"
-                    android:layout_width="85dp"
+                    android:layout_width="90dp"
                     android:text="@string/tab_diary" />
 
                 <Button
                     android:id="@+id/tabHero"
                     style="@style/NativeShellTab"
-                    android:layout_width="68dp"
+                    android:layout_width="72dp"
                     android:text="@string/tab_hero" />
 
                 <Button
                     android:id="@+id/tabItems"
                     style="@style/NativeShellTab"
-                    android:layout_width="68dp"
+                    android:layout_width="72dp"
                     android:text="@string/tab_items" />
 
                 <Button
@@ -77,10 +77,11 @@
         <LinearLayout
             android:id="@+id/nativeStatusBar"
             android:layout_width="match_parent"
-            android:layout_height="26dp"
+            android:layout_height="0dp"
             android:background="#383838"
             android:gravity="center_vertical"
             android:orientation="horizontal"
+            android:visibility="gone"
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
 
@@ -92,7 +93,7 @@
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:textColor="@color/shell_text_secondary"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 tools:text="♥ 468/508" />
 
             <TextView
@@ -103,7 +104,7 @@
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:textColor="@color/shell_text_secondary"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 tools:text="✺ 100%" />
 
             <TextView
@@ -114,7 +115,7 @@
                 android:gravity="center_vertical|end"
                 android:singleLine="true"
                 android:textColor="@color/shell_text_secondary"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 tools:text="⚱ 7/50" />
 
             <TextView
@@ -125,29 +126,9 @@
                 android:gravity="center_vertical|end"
                 android:singleLine="true"
                 android:textColor="@color/shell_text_secondary"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 tools:text="≋ 765" />
         </LinearLayout>
-
-        <HorizontalScrollView
-            android:id="@+id/nativeLoggerScroll"
-            android:layout_width="match_parent"
-            android:layout_height="22dp"
-            android:background="#383838"
-            android:fillViewport="false"
-            android:overScrollMode="never"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:scrollbars="none"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:id="@+id/nativeUiPlusLogger"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal" />
-        </HorizontalScrollView>
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -159,6 +140,250 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#000000" />
+
+            <HorizontalScrollView
+                android:id="@+id/nativeLoggerScroll"
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:layout_marginTop="28dp"
+                android:background="#383838"
+                android:fillViewport="false"
+                android:overScrollMode="never"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/nativeUiPlusLogger"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <ScrollView
+                android:id="@+id/nativePultPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="50dp"
+                android:background="@color/shell_background"
+                android:fillViewport="true"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="19dp"
+                        android:layout_marginTop="7dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="Прана"
+                            android:textColor="@color/shell_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/nativePultPrana"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:textColor="@color/shell_text_primary"
+                            android:textSize="16sp"
+                            tools:text="100%" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/nativePultPranaProgress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:maxHeight="4dp"
+                        android:minHeight="4dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressTint="@color/shell_accent"
+                        android:progressBackgroundTint="#444444" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="44dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="▼"
+                            android:textColor="#88A8FF"
+                            android:textSize="17sp" />
+
+                        <EditText
+                            android:id="@+id/nativeVoiceInput"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="Глас божий"
+                            android:imeOptions="actionSend"
+                            android:singleLine="true"
+                            android:textColor="@color/shell_text_primary"
+                            android:textColorHint="@color/shell_text_secondary"
+                            android:textSize="16sp" />
+
+                        <Button
+                            android:id="@+id/nativeVoiceSubmit"
+                            android:layout_width="88dp"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent"
+                            android:text="Изречь"
+                            android:textAllCaps="false"
+                            android:textColor="#88A8FF"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="@color/shell_divider" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="72dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/nativePultGood"
+                            style="@style/NativePultButton"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="@string/action_good_pult" />
+
+                        <View
+                            android:layout_width="1px"
+                            android:layout_height="match_parent"
+                            android:background="@color/shell_divider" />
+
+                        <Button
+                            android:id="@+id/nativePultBad"
+                            style="@style/NativePultButton"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="@string/action_bad_pult" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="@color/shell_divider" />
+
+                    <Button
+                        android:id="@+id/nativePultMiracle"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        android:text="@string/action_miracle" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="19dp" />
+
+                    <Button
+                        android:id="@+id/nativePultArena"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        tools:text="Отправить на арену" />
+
+                    <Button
+                        android:id="@+id/nativePultTraining"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        tools:text="Послать на тренировку" />
+
+                    <TextView
+                        android:id="@+id/nativePultDungeon"
+                        android:layout_width="match_parent"
+                        android:layout_height="39dp"
+                        android:gravity="center"
+                        android:textColor="@color/shell_text_primary"
+                        android:textSize="16sp"
+                        tools:text="Подземелье откроется через 2 ч 19 мин" />
+
+                    <Button
+                        android:id="@+id/nativePultSail"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        tools:text="Снарядить в плавание" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="19dp" />
+
+                    <TextView
+                        android:id="@+id/nativePultCharge"
+                        android:layout_width="match_parent"
+                        android:layout_height="27dp"
+                        android:gravity="center"
+                        android:textColor="@color/shell_text_primary"
+                        android:textSize="16sp"
+                        tools:text="Зарядов в аккумуляторе: 77" />
+
+                    <Button
+                        android:id="@+id/nativePultRestorePrana"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="39dp"
+                        android:visibility="gone"
+                        tools:text="Восстановить прану"
+                        tools:visibility="visible" />
+
+                    <Button
+                        android:id="@+id/nativePultChargeButton"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        tools:text="Зарядить аккумулятор" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="19dp" />
+
+                    <TextView
+                        android:id="@+id/nativePultBlessing"
+                        android:layout_width="match_parent"
+                        android:layout_height="19dp"
+                        android:gravity="center"
+                        android:textColor="@color/shell_text_primary"
+                        android:textSize="16sp"
+                        tools:text="Благословлён на 22 дня" />
+                </LinearLayout>
+            </ScrollView>
 
             <ListView
                 android:id="@+id/nativeMenuList"
@@ -175,11 +400,11 @@
 
     <ImageButton
         android:id="@+id/quickActionButton"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="11dp"
-        android:layout_marginBottom="11dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/fab_background"
         android:contentDescription="@string/quick_action"
         android:elevation="8dp"
@@ -198,19 +423,20 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="15dp"
-            android:layout_marginBottom="155dp"
+            android:layout_marginEnd="80dp"
+            android:layout_marginBottom="171dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_miracle"
             android:padding="10dp"
             android:src="@drawable/ic_mini_miracle" />
 
         <TextView
+            android:id="@+id/miniRemoteMiracleLabel"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="15dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="137dp"
+            android:layout_marginEnd="89dp"
+            android:layout_marginBottom="159dp"
             android:background="@drawable/mini_label_background"
             android:gravity="center"
             android:text="@string/action_miracle_short"
@@ -218,23 +444,51 @@
             android:textSize="11sp" />
 
         <ImageButton
+            android:id="@+id/miniRemoteRestorePrana"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="23dp"
+            android:layout_marginBottom="183dp"
+            android:background="@drawable/mini_action_background"
+            android:contentDescription="@string/action_restore_prana"
+            android:padding="10dp"
+            android:src="@drawable/ic_mini_charge"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/miniRemoteRestorePranaLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="15dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="171dp"
+            android:background="@drawable/mini_label_background"
+            android:gravity="center"
+            android:text="@string/action_charge_short"
+            android:textColor="@color/shell_text_primary"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+        <ImageButton
             android:id="@+id/miniRemoteBad"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="84dp"
-            android:layout_marginBottom="149dp"
+            android:layout_marginEnd="129dp"
+            android:layout_marginBottom="139dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_bad"
             android:padding="10dp"
             android:src="@drawable/ic_mini_bad" />
 
         <TextView
+            android:id="@+id/miniRemoteBadLabel"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="15dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="72dp"
-            android:layout_marginBottom="130dp"
+            android:layout_marginEnd="135dp"
+            android:layout_marginBottom="127dp"
             android:background="@drawable/mini_label_background"
             android:gravity="center"
             android:text="@string/action_bad_short"
@@ -246,19 +500,20 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="92dp"
-            android:layout_marginBottom="107dp"
+            android:layout_marginEnd="161dp"
+            android:layout_marginBottom="90dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_voice"
             android:padding="10dp"
             android:src="@drawable/ic_mini_voice" />
 
         <TextView
+            android:id="@+id/miniRemoteVoiceLabel"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="15dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="87dp"
-            android:layout_marginBottom="88dp"
+            android:layout_marginEnd="172dp"
+            android:layout_marginBottom="78dp"
             android:background="@drawable/mini_label_background"
             android:gravity="center"
             android:text="@string/action_voice_short"
@@ -270,19 +525,20 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="105dp"
-            android:layout_marginBottom="49dp"
+            android:layout_marginEnd="173dp"
+            android:layout_marginBottom="33dp"
             android:background="@drawable/mini_action_background"
             android:contentDescription="@string/action_good"
             android:padding="10dp"
             android:src="@drawable/ic_mini_good" />
 
         <TextView
+            android:id="@+id/miniRemoteGoodLabel"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="15dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="93dp"
-            android:layout_marginBottom="30dp"
+            android:layout_marginEnd="175dp"
+            android:layout_marginBottom="21dp"
             android:background="@drawable/mini_label_background"
             android:gravity="center"
             android:text="@string/action_good_short"

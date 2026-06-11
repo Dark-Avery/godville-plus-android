@@ -13,18 +13,31 @@ body.mbg #tabbar .tab-content {
 }
 
 body.mbg #statusbar {
-  height: 1px !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  overflow: hidden !important;
-  pointer-events: none !important;
-  position: absolute !important;
-  right: 0 !important;
-  top: 0 !important;
-  z-index: -1 !important;
+  background: #000 !important;
+  border: 0 !important;
 }
 
-body.mbg #logger,
+body.mbg #statusbar > *,
+body.mbg #statusbar .l_stat {
+  background: transparent !important;
+}
+
+body.mbg #statusbar [class^="e_sb_"],
+body.mbg #statusbar [class*=" e_sb_"] {
+  color: #f2f2f2 !important;
+}
+
+body.mbg #logger {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 4px 8px !important;
+  background: #000 !important;
+  color: #f2f2f2;
+  border: 0 !important;
+}
+
 body.mbg #informer_bar,
 body.mbg #forum_informer_bar,
 body.mbg #menu_rmt,

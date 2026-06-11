@@ -6,12 +6,14 @@ import com.google.gson.JsonParser
 data class NativeReplicaSnapshot(
     val status: NativeStatus,
     val logger: NativeLogger,
+    val pult: NativePult,
 ) {
     companion object {
         private const val MAX_PAYLOAD_LENGTH = 32 * 1024
         private const val MAX_STATUS_TEXT_LENGTH = 32
         private const val MAX_LOGGER_SEGMENTS = 32
         private const val MAX_LOGGER_TEXT_LENGTH = 64
+        private const val MAX_SELECTOR_LENGTH = 256
         private const val DEFAULT_LOGGER_COLOR = "#A7A9B0"
 
         fun decode(payload: String): NativeReplicaSnapshot? {
@@ -19,6 +21,7 @@ data class NativeReplicaSnapshot(
             val json = runCatching { JsonParser.parseString(payload).asJsonObject }.getOrNull() ?: return null
             val statusJson = json.getAsJsonObjectOrNull("status")
             val loggerJson = json.getAsJsonObjectOrNull("logger")
+            val pultJson = json.getAsJsonObjectOrNull("pult")
 
             return NativeReplicaSnapshot(
                 status = NativeStatus(
@@ -46,6 +49,23 @@ data class NativeReplicaSnapshot(
                         }
                         .orEmpty(),
                 ),
+                pult = NativePult(
+                    prana = pultJson
+                        ?.boundedText("prana", MAX_STATUS_TEXT_LENGTH)
+                        ?.let { Regex("""\d+""").find(it)?.value?.plus("%") },
+                    charge = pultJson?.boundedText("charge", MAX_STATUS_TEXT_LENGTH),
+                    blessing = pultJson?.boundedText("blessing", MAX_LOGGER_TEXT_LENGTH),
+                    dungeon = pultJson?.boundedText("dungeon", MAX_LOGGER_TEXT_LENGTH),
+                    arena = pultJson?.action("arena"),
+                    training = pultJson?.action("training"),
+                    sail = pultJson?.action("sail"),
+                    restorePranaAction = pultJson?.action("restorePranaAction"),
+                    chargeAction = pultJson?.action("chargeAction"),
+                    voiceAvailable = pultJson?.boolean("voiceAvailable", false) ?: false,
+                    goodAvailable = pultJson?.boolean("goodAvailable", false) ?: false,
+                    badAvailable = pultJson?.boolean("badAvailable", false) ?: false,
+                    miracleAvailable = pultJson?.boolean("miracleAvailable", false) ?: false,
+                ),
             )
         }
 
@@ -69,6 +89,17 @@ data class NativeReplicaSnapshot(
         private fun JsonObject.getAsJsonArrayOrNull(name: String) =
             runCatching { get(name)?.takeUnless { it.isJsonNull }?.asJsonArray }.getOrNull()
 
+        private fun JsonObject.action(name: String): NativePultAction? {
+            val value = getAsJsonObjectOrNull(name) ?: return null
+            val text = value.boundedText("text", MAX_LOGGER_TEXT_LENGTH)
+                ?.takeIf { it.isNotBlank() }
+                ?: return null
+            val selector = value.boundedText("selector", MAX_SELECTOR_LENGTH)
+                ?.takeIf { it.isNotBlank() }
+                ?: return null
+            return NativePultAction(text = text, selector = selector)
+        }
+
         private val HEX_COLOR = Regex("^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$")
     }
 }
@@ -90,4 +121,25 @@ data class NativeLoggerSegment(
     val color: String,
     val bold: Boolean,
     val title: String?,
+)
+
+data class NativePult(
+    val prana: String? = null,
+    val charge: String? = null,
+    val blessing: String? = null,
+    val dungeon: String? = null,
+    val arena: NativePultAction? = null,
+    val training: NativePultAction? = null,
+    val sail: NativePultAction? = null,
+    val restorePranaAction: NativePultAction? = null,
+    val chargeAction: NativePultAction? = null,
+    val voiceAvailable: Boolean = false,
+    val goodAvailable: Boolean = false,
+    val badAvailable: Boolean = false,
+    val miracleAvailable: Boolean = false,
+)
+
+data class NativePultAction(
+    val text: String,
+    val selector: String,
 )

@@ -71,6 +71,38 @@ class NativeReplicaSnapshotTest {
     }
 
     @Test
+    fun decodesPultSnapshot() {
+        val snapshot = NativeReplicaSnapshot.decode(
+            """
+            {
+              "pult": {
+                "prana": "100%%",
+                "charge": "77",
+                "blessing": "Благословлён на 22 дня",
+                "dungeon": "Подземелье откроется через 1 ч 31 мин",
+                "arena": {"text":"Отправить на арену","selector":"#cntrl .to_arena"},
+                "restorePranaAction": {
+                  "text": "Восстановить прану",
+                  "selector": "#cntrl > div:nth-of-type(7) > a:nth-of-type(1)"
+                }
+              },
+              "logger": {"visible": false, "segments": []}
+            }
+            """.trimIndent(),
+        )
+
+        requireNotNull(snapshot)
+        assertEquals("100%", snapshot.pult.prana)
+        assertEquals("77", snapshot.pult.charge)
+        assertEquals("Благословлён на 22 дня", snapshot.pult.blessing)
+        assertEquals("Подземелье откроется через 1 ч 31 мин", snapshot.pult.dungeon)
+        assertEquals("Отправить на арену", snapshot.pult.arena?.text)
+        assertEquals("#cntrl .to_arena", snapshot.pult.arena?.selector)
+        assertEquals("Восстановить прану", snapshot.pult.restorePranaAction?.text)
+        assertEquals("#cntrl > div:nth-of-type(7) > a:nth-of-type(1)", snapshot.pult.restorePranaAction?.selector)
+    }
+
+    @Test
     fun rejectsInvalidAndOversizedPayloads() {
         assertNull(NativeReplicaSnapshot.decode("not json"))
         assertNull(NativeReplicaSnapshot.decode("x".repeat(32 * 1024 + 1)))
