@@ -22,6 +22,15 @@ class GodvilleShellScriptsTest {
     }
 
     @Test
+    fun visibleTextClicksSearchInteractiveElements() {
+        val script = GodvilleShellScripts.clickVisibleText("Гильдия")
+
+        assertTrue(script.contains("querySelectorAll('a, button"))
+        assertTrue(script.contains("Гильдия"))
+        assertTrue(script.contains("match.click()"))
+    }
+
+    @Test
     fun nativeReplicaBridgeObservesStatusAndLogger() {
         val script = GodvilleShellScripts.installNativeReplicaBridge()
 

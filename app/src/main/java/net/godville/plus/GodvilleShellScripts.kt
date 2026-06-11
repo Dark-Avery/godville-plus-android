@@ -44,6 +44,27 @@ object GodvilleShellScripts {
         })()
     """.trimIndent()
 
+    fun clickVisibleText(label: String): String {
+        val quotedLabel = gson.toJson(label)
+        return """
+            (function() {
+              const target = String($quotedLabel || '').replace(/\s+/g, ' ').trim().toLowerCase();
+              if (!target) return 'empty';
+              const nodes = Array.from(document.querySelectorAll('a, button, [role="button"], input[type="button"], input[type="submit"]'));
+              const match = nodes.find(function(node) {
+                const text = String(node.innerText || node.textContent || node.value || node.getAttribute('aria-label') || '')
+                  .replace(/\s+/g, ' ')
+                  .trim()
+                  .toLowerCase();
+                return text && (text.includes(target) || target.includes(text));
+              });
+              if (!match) return 'missing';
+              match.click();
+              return 'ok';
+            })()
+        """.trimIndent()
+    }
+
     fun speakVoice(phrase: String): String {
         val quotedPhrase = gson.toJson(phrase)
         return """

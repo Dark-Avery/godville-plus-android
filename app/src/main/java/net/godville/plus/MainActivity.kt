@@ -619,6 +619,7 @@ class MainActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(11.dpInt(), 8.dpInt(), 11.dpInt(), 8.dpInt())
+                setOnClickListener { clickVisibleText(value) }
                 addView(
                     TextView(this@MainActivity).apply {
                         text = label
@@ -650,10 +651,15 @@ class MainActivity : AppCompatActivity() {
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_text_primary))
                 textSize = 14f
                 setPadding(11.dpInt(), 8.dpInt(), 11.dpInt(), 8.dpInt())
+                setOnClickListener { clickVisibleText(line) }
             },
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT),
         )
         nativeGenericContent.addView(divider())
+    }
+
+    private fun clickVisibleText(label: String) {
+        webView.evaluateJavascript(GodvilleShellScripts.clickVisibleText(label), null)
     }
 
     private fun renderDiaryActivityHeader(page: NativePage) {
@@ -1075,7 +1081,7 @@ class MainActivity : AppCompatActivity() {
             val textView = (convertView as? TextView) ?: TextView(this@MainActivity)
             textView.text = row.title
             textView.setPadding(36, if (row is GodvilleMenuRow.Header) 34 else 28, 36, 28)
-            textView.textSize = if (row is GodvilleMenuRow.Header) 18f else 17f
+            textView.textSize = if (row is GodvilleMenuRow.Header) 16f else 14f
             textView.setTypeface(null, if (row is GodvilleMenuRow.Header) Typeface.BOLD else Typeface.NORMAL)
             textView.setTextColor(
                 ContextCompat.getColor(
