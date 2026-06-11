@@ -53,7 +53,7 @@ object ErinomeAssetBundle {
             const label = (active.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
             const aliases = [
               ['pult', ['пульт', 'remote']],
-              ['diary', ['дневник', 'diary']],
+              ['diary', ['дневник', 'diary', 'босс', 'boss', 'подземелье', 'dungeon', 'бой', 'хроника']],
               ['hero', ['герой', 'hero']],
               ['items', ['вещи', 'items', 'inventory']],
               ['friends', ['друзья', 'friends']],

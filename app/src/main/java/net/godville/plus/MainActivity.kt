@@ -1010,7 +1010,7 @@ class MainActivity : AppCompatActivity() {
         val webSearchTerms: List<String>,
     ) {
         PULT(R.id.tabPult, "pult", listOf("Пульт", "Pульт", "ПУЛЬТ")),
-        DIARY(R.id.tabDiary, "diary", listOf("Дневник", "ДНЕВНИК", "Дневник героя")),
+        DIARY(R.id.tabDiary, "diary", listOf("Дневник", "ДНЕВНИК", "Дневник героя", "Босс", "БОСС", "Подземелье", "ПОДЗЕМЕЛЬЕ", "Бой", "Хроника")),
         HERO(R.id.tabHero, "hero", listOf("Герой", "ГЕРОЙ", "Данные героя")),
         ITEMS(R.id.tabItems, "items", listOf("Вещи", "ВЕЩИ", "Снаряжение")),
         FRIENDS(R.id.tabFriends, "friends", listOf("Друзья", "ДРУЗЬЯ", "Союзники", "Соратники")),

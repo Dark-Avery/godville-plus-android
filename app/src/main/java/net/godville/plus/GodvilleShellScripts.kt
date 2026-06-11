@@ -11,14 +11,32 @@ object GodvilleShellScripts {
             (function() {
               const labels = $quotedLabels;
               const root = document.querySelector('#tabbar') || document;
-              const candidates = Array.from(root.querySelectorAll('button, a, [role="tab"], .tab-btn, .tab-selector > *'));
               const normalize = (value) => (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
-              for (const node of candidates) {
-                const text = normalize(node.textContent);
-                if (labels.some((label) => text.includes(normalize(label)))) {
-                  node.click();
-                  return 'ok';
-                }
+              const normalizedLabels = labels.map(normalize);
+              const tabButtons = Array.from(document.querySelectorAll('#tabbar .tab-selector > .tab-btn'));
+              const tabMatch = tabButtons.find(function(button) {
+                const text = normalize(button.textContent);
+                return normalizedLabels.some(function(label) {
+                  return text === label || text.includes(label);
+                });
+              });
+              if (tabMatch) {
+                tabMatch.click();
+                return 'ok';
+              }
+              const candidates = Array.from(root.querySelectorAll('button, a, [role="tab"], .tab-btn, .tab-selector > *, li, div, span'));
+              const matches = candidates
+                .map(function(node) { return { node: node, text: normalize(node.textContent) }; })
+                .filter(function(entry) {
+                  return entry.text && normalizedLabels.some(function(label) {
+                    return entry.text === label || entry.text.includes(label);
+                  });
+                })
+                .sort(function(left, right) { return left.text.length - right.text.length; });
+              for (const entry of matches) {
+                const clickTarget = entry.node.closest('button, a, [role="tab"], li') || entry.node;
+                clickTarget.click();
+                return 'ok';
               }
               return 'missing';
             })()
