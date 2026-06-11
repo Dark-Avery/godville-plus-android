@@ -12,6 +12,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
@@ -46,6 +47,7 @@ import net.godville.plus.monitoring.MonitoringScheduler
 import net.godville.plus.web.GodvilleWebViewClient
 import org.json.JSONObject
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -101,6 +103,8 @@ class MainActivity : AppCompatActivity() {
     private var pageGeneration = 0
     private var selectedTab = NativeTab.PULT
     private var latestPult = NativePult()
+    private var swipeStartX = 0f
+    private var swipeStartY = 0f
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -160,6 +164,17 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         webView.saveState(outState)
         super.onSaveInstanceState(outState)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                swipeStartX = ev.x
+                swipeStartY = ev.y
+            }
+            MotionEvent.ACTION_UP -> maybeHandleNativeTabSwipe(ev.x, ev.y)
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -429,7 +444,7 @@ class MainActivity : AppCompatActivity() {
         nativeStatusGold.text = statusText("≋", snapshot.status.gold)
         renderNativePult(snapshot.pult)
         renderNativeDiary(snapshot.page)
-        renderNativeGenericPage(snapshot.page)
+        renderNativeGenericPage()
 
         nativeUiPlusLogger.removeAllViews()
         nativeLoggerScroll.visibility = View.GONE
@@ -475,39 +490,11 @@ class MainActivity : AppCompatActivity() {
         nativeDiaryPanel.visibility = View.VISIBLE
     }
 
-    private fun renderNativeGenericPage(page: NativePage) {
-        if (selectedTab == NativeTab.PULT || selectedTab == NativeTab.DIARY || page.lines.isEmpty()) {
-            nativeGenericPanel.visibility = View.GONE
-            return
-        }
-        nativeDiaryPanel.visibility = View.GONE
-        nativeGenericContent.removeAllViews()
-        val lines = trimGenericPageChrome(page.lines)
-        if (selectedTab == NativeTab.HERO) {
-            renderNativeHeroPage(lines)
-            nativeGenericPanel.visibility = View.VISIBLE
-            return
-        }
-        var index = 0
-        while (index < lines.size) {
-            val line = lines[index]
-            val next = lines.getOrNull(index + 1)
-            when {
-                isGenericHeader(line) -> {
-                    renderGenericHeader(line)
-                    index += 1
-                }
-                next != null && isLikelyValueLine(next) && !isGenericHeader(next) -> {
-                    renderGenericKeyValue(line, next)
-                    index += 2
-                }
-                else -> {
-                    renderGenericLine(line)
-                    index += 1
-                }
-            }
-        }
-        nativeGenericPanel.visibility = View.VISIBLE
+    private fun renderNativeGenericPage() {
+        // The generic replica used raw document innerText and was visibly worse than
+        // Godville's mobile DOM on all non-pult pages. Keep those pages on the real
+        // web layout until each one has a structured, screen-specific renderer.
+        nativeGenericPanel.visibility = View.GONE
     }
 
     private fun renderNativeHeroPage(lines: List<String>) {
@@ -805,6 +792,35 @@ class MainActivity : AppCompatActivity() {
         updateQuickActionVisibility()
     }
 
+    private fun maybeHandleNativeTabSwipe(endX: Float, endY: Float) {
+        if (webView.url?.let(PendingShellTab::isSuperheroUrl) != true) return
+        if (nativeMenuList.visibility == View.VISIBLE || miniRemoteMenu.visibility == View.VISIBLE) return
+
+        val dx = endX - swipeStartX
+        val dy = endY - swipeStartY
+        val absDx = abs(dx)
+        val absDy = abs(dy)
+        if (absDx < SWIPE_TAB_MIN_DISTANCE_DP.dp()) return
+        if (absDy > absDx * SWIPE_TAB_MAX_VERTICAL_RATIO) return
+
+        selectAdjacentNativeTab(if (dx < 0) 1 else -1)
+    }
+
+    private fun selectAdjacentNativeTab(step: Int) {
+        val tabs = listOf(
+            NativeTab.PULT,
+            NativeTab.DIARY,
+            NativeTab.HERO,
+            NativeTab.ITEMS,
+            NativeTab.FRIENDS,
+            NativeTab.PANTHEONS,
+        )
+        val currentIndex = tabs.indexOf(selectedTab)
+        if (currentIndex < 0) return
+        val targetIndex = (currentIndex + step).coerceIn(0, tabs.lastIndex)
+        if (targetIndex != currentIndex) selectNativeTab(tabs[targetIndex])
+    }
+
     private fun updateNativeTabSelection(tab: NativeTab) {
         val activeText = ContextCompat.getColor(this, R.color.shell_text_primary)
         val inactiveText = ContextCompat.getColor(this, R.color.shell_text_secondary)
@@ -853,13 +869,7 @@ class MainActivity : AppCompatActivity() {
         if (selectedTab != NativeTab.DIARY || url?.let(PendingShellTab::isSuperheroUrl) != true) {
             nativeDiaryPanel.visibility = View.GONE
         }
-        if (
-            selectedTab == NativeTab.PULT ||
-            selectedTab == NativeTab.DIARY ||
-            url?.let(PendingShellTab::isSuperheroUrl) != true
-        ) {
-            nativeGenericPanel.visibility = View.GONE
-        }
+        nativeGenericPanel.visibility = View.GONE
     }
 
     private fun scrollTabIntoView(tab: Button) {
@@ -1005,8 +1015,10 @@ class MainActivity : AppCompatActivity() {
         private const val MENU_ABOUT = 6
         private const val TAB_ACTION_DELAY_MS = 250L
         private const val NATIVE_REPLICA_BRIDGE_DELAY_MS = 450L
-        private const val MINI_REMOTE_BUTTON_DP = 45.4f
+        private const val MINI_REMOTE_BUTTON_DP = 36f
         private const val MINI_REMOTE_LABEL_HEIGHT_DP = 15f
+        private const val SWIPE_TAB_MIN_DISTANCE_DP = 72f
+        private const val SWIPE_TAB_MAX_VERTICAL_RATIO = 0.45f
         private val ALLOWED_BRIDGE_ORIGINS = setOf(
             "https://godville.net",
             "https://b.godville.net",

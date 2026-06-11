@@ -389,7 +389,7 @@
                 android:id="@+id/nativeDiaryPanel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="40dp"
                 android:background="@color/shell_background"
                 android:fillViewport="false"
                 android:visibility="gone">
@@ -405,7 +405,7 @@
                 android:id="@+id/nativeGenericPanel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="40dp"
                 android:background="@color/shell_background"
                 android:fillViewport="false"
                 android:visibility="gone">
@@ -432,15 +432,15 @@
 
     <ImageButton
         android:id="@+id/quickActionButton"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="12dp"
         android:background="@drawable/fab_background"
         android:contentDescription="@string/quick_action"
         android:elevation="8dp"
-        android:padding="16dp"
+        android:padding="10dp"
         android:scaleType="center"
         android:src="@drawable/ic_remote_control" />
 
