@@ -1,0 +1,140 @@
+/* Native Android shell owns the visible top-level navigation. */
+body.mbg #tabbar > .tab-selector,
+body.mbg #tabbar .tab-selector {
+  display: none !important;
+}
+
+body.mbg .tab-selector {
+  display: none !important;
+}
+
+body.mbg #tabbar .tab-content {
+  padding-bottom: 0 !important;
+}
+
+body.mbg #statusbar {
+  background: #000 !important;
+  border: 0 !important;
+}
+
+body.mbg #statusbar > *,
+body.mbg #statusbar .l_stat {
+  background: transparent !important;
+}
+
+body.mbg #statusbar [class^="e_sb_"],
+body.mbg #statusbar [class*=" e_sb_"] {
+  color: #f2f2f2 !important;
+}
+
+body.mbg #logger {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  min-height: 28px !important;
+  padding: 3px 8px 5px !important;
+  background: #000 !important;
+  color: #f2f2f2;
+  border: 0 !important;
+  line-height: 20px !important;
+  overflow-y: visible !important;
+}
+
+body.mbg #hero_block .mpage:not(#tabbar) .ui-bar,
+body.mbg #hero_block .mpage:not(#tabbar) .ui-bar-inherit,
+body.mbg #hero_block .mpage:not(#tabbar) [class*="ui-bar-"],
+body.mbg #hero_block .mpage:not(#tabbar) [class*="ui-body-"],
+body.mbg #hero_block .mpage:not(#tabbar) .ui-li-divider,
+body.mbg #hero_block .mpage:not(#tabbar) .block_h,
+body.mbg #hero_block .mpage:not(#tabbar) .hline {
+  background: #000 !important;
+  background-image: none !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid #10313b !important;
+  box-shadow: none !important;
+  color: #f2f2f2 !important;
+  text-align: left !important;
+  text-shadow: none !important;
+}
+
+body.mbg #hero_block .mpage:not(#tabbar) [class*="ui-bar-"] *,
+body.mbg #hero_block .mpage:not(#tabbar) [class*="ui-body-"] * {
+  text-shadow: none !important;
+}
+
+body.mbg #hero_block .mpage:not(#tabbar) .ui-bar h1,
+body.mbg #hero_block .mpage:not(#tabbar) .ui-bar h2,
+body.mbg #hero_block .mpage:not(#tabbar) .ui-bar h3,
+body.mbg #hero_block .mpage:not(#tabbar) .block_title,
+body.mbg #hero_block .mpage:not(#tabbar) .l_header {
+  color: #f2f2f2 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  text-align: left !important;
+  text-shadow: none !important;
+}
+
+body.mbg .e_m_friends .fsearchbar,
+body.mbg .e_m_friends .ui-input-search {
+  background: #000 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #a7a9b0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 8px 8px !important;
+}
+
+body.mbg .e_m_friends .frname {
+  color: #f2f2f2 !important;
+  display: block !important;
+  font-weight: 700 !important;
+  line-height: 24px !important;
+}
+
+body.mbg #tabbar .tab-content .line.hline,
+body.mbg #tabbar .tab-content .msgDockPopup,
+body.mbg #tabbar .tab-content .msgDockPopup .line.div_link,
+body.mbg #tabbar .tab-content .msgDockPopup .show_gc {
+  background: #000 !important;
+  background-image: none !important;
+  color: #f2f2f2 !important;
+  text-shadow: none !important;
+}
+
+body.mbg #tabbar .tab-content .line.hline {
+  border-bottom: 1px solid #10313b !important;
+  height: auto !important;
+  min-height: 40px !important;
+  padding: 8px 16px !important;
+  text-align: left !important;
+}
+
+body.mbg #tabbar .tab-content .line.hline .l_header {
+  color: #f2f2f2 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 28px !important;
+  text-align: left !important;
+}
+
+body.mbg #tabbar .tab-content .e_m_friends .frline {
+  height: auto !important;
+  min-height: 52px !important;
+  overflow: visible !important;
+  padding: 6px 8px !important;
+  white-space: normal !important;
+}
+
+body.mbg #informer_bar,
+body.mbg #forum_informer_bar,
+body.mbg #menu_rmt,
+body.mbg #menu_w,
+body.mbg .b_handle,
+body.mbg .msgDockWrapper > .msgDock.frbutton:not(.frbutton_pressed),
+body.mbg .msgDock.frbutton:not(.frbutton_pressed) {
+  display: none !important;
+}
