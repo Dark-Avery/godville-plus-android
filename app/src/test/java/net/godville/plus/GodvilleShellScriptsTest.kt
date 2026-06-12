@@ -31,6 +31,14 @@ class GodvilleShellScriptsTest {
     }
 
     @Test
+    fun selectorClickSupportsUiPlusMenuRows() {
+        val script = GodvilleShellScripts.clickSelector(".e_m_ui_settings")
+
+        assertTrue(script.contains(".e_m_ui_settings"))
+        assertTrue(script.contains("node.click()"))
+    }
+
+    @Test
     fun nativeReplicaBridgeObservesStatusAndLogger() {
         val script = GodvilleShellScripts.installNativeReplicaBridge()
 
@@ -40,6 +48,12 @@ class GodvilleShellScriptsTest {
         assertTrue(script.contains(".e_sb_hero_hp"))
         assertTrue(script.contains(".e_sb_hero_inventory"))
         assertTrue(script.contains("restorePranaAction"))
+        assertTrue(script.contains("resurrectionAction"))
+        assertTrue(script.contains("воскрес"))
+        assertTrue(script.contains("voice_generator"))
+        assertTrue(script.contains("collectUiPlusMenu"))
+        assertTrue(script.contains(".e_m_available_coupon"))
+        assertTrue(script.contains(".e_m_available_ad"))
         assertTrue(script.contains("collectDiaryPage"))
         assertTrue(script.contains("diaryRows"))
         assertTrue(script.contains("nativeSnapshot"))

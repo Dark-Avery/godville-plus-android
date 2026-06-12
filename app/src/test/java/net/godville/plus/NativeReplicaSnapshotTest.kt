@@ -80,12 +80,24 @@ class NativeReplicaSnapshotTest {
                 "charge": "77",
                 "blessing": "Благословлён на 22 дня",
                 "dungeon": "Подземелье откроется через 1 ч 31 мин",
+                "hints": [
+                  {"text":"молись","selector":"#cntrl .voice_generator.pray"},
+                  {"text":"жертвуй","selector":"#cntrl .voice_generator.sacrifice"}
+                ],
                 "arena": {"text":"Отправить на арену","selector":"#cntrl .to_arena"},
+                "resurrectionAction": {
+                  "text": "Воскресить",
+                  "selector": "#cntrl > div:nth-of-type(3) > a"
+                },
                 "restorePranaAction": {
                   "text": "Восстановить прану",
                   "selector": "#cntrl > div:nth-of-type(7) > a:nth-of-type(1)"
                 }
               },
+              "uiPlusMenu": [
+                {"text":"Настройки UI+ ➠","selector":".e_m_ui_settings"},
+                {"text":"Астропрогноз: [spoilers]","selector":".e_m_forecast"}
+              ],
               "logger": {"visible": false, "segments": []}
             }
             """.trimIndent(),
@@ -96,10 +108,28 @@ class NativeReplicaSnapshotTest {
         assertEquals("77", snapshot.pult.charge)
         assertEquals("Благословлён на 22 дня", snapshot.pult.blessing)
         assertEquals("Подземелье откроется через 1 ч 31 мин", snapshot.pult.dungeon)
+        assertEquals(listOf("молись", "жертвуй"), snapshot.pult.hints.map { it.text })
         assertEquals("Отправить на арену", snapshot.pult.arena?.text)
         assertEquals("#cntrl .to_arena", snapshot.pult.arena?.selector)
+        assertEquals("Воскресить", snapshot.pult.resurrectionAction?.text)
+        assertEquals("#cntrl > div:nth-of-type(3) > a", snapshot.pult.resurrectionAction?.selector)
         assertEquals("Восстановить прану", snapshot.pult.restorePranaAction?.text)
         assertEquals("#cntrl > div:nth-of-type(7) > a:nth-of-type(1)", snapshot.pult.restorePranaAction?.selector)
+        assertEquals(2, snapshot.uiPlusMenu.size)
+        assertEquals(".e_m_forecast", snapshot.uiPlusMenu[1].selector)
+    }
+
+    @Test
+    fun deadHeroMiniRemoteContainsOnlyResurrection() {
+        val pult = NativePult(
+            resurrectionAction = NativePultAction("Воскресить", "#cntrl .resurrect"),
+            voiceAvailable = true,
+            goodAvailable = true,
+            badAvailable = true,
+            miracleAvailable = true,
+        )
+
+        assertEquals(listOf(NativeMiniRemoteAction.RESURRECT), pult.availableMiniRemoteActions())
     }
 
     @Test

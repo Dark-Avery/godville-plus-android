@@ -3,6 +3,7 @@
     <color name="shell_background">#000000</color>
     <color name="shell_surface">#151515</color>
     <color name="shell_accent">#55C8EA</color>
+    <color name="shell_action">#88A8FF</color>
     <color name="shell_divider">#10313B</color>
     <color name="shell_text_primary">#F2F2F2</color>
     <color name="shell_text_secondary">#A7A9B0</color>

@@ -79,6 +79,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativePultPanel: View
     private lateinit var nativePultPrana: TextView
     private lateinit var nativePultPranaProgress: ProgressBar
+    private lateinit var nativePultHintsScroll: HorizontalScrollView
+    private lateinit var nativePultHints: LinearLayout
+    private lateinit var nativePultBeforeVoiceSpacer: View
+    private lateinit var nativePultVoiceRow: View
+    private lateinit var nativePultVoiceDivider: View
+    private lateinit var nativePultInfluenceRow: View
+    private lateinit var nativePultInfluenceDivider: View
+    private lateinit var nativePultBeforeTravelSpacer: View
+    private lateinit var nativePultBeforeAccumulatorSpacer: View
+    private lateinit var nativePultAfterResurrectSpacer: View
     private lateinit var nativeVoiceInput: EditText
     private lateinit var nativeVoiceSubmit: Button
     private lateinit var nativePultGood: Button
@@ -88,6 +98,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nativePultTraining: Button
     private lateinit var nativePultDungeon: TextView
     private lateinit var nativePultSail: Button
+    private lateinit var nativePultResurrect: Button
     private lateinit var nativePultCharge: TextView
     private lateinit var nativePultRestorePrana: Button
     private lateinit var nativePultChargeButton: Button
@@ -103,6 +114,7 @@ class MainActivity : AppCompatActivity() {
     private var pageGeneration = 0
     private var selectedTab = NativeTab.PULT
     private var latestPult = NativePult()
+    private var latestUiPlusMenu: List<NativePultAction> = emptyList()
     private var swipeStartX = 0f
     private var swipeStartY = 0f
 
@@ -384,7 +396,10 @@ class MainActivity : AppCompatActivity() {
             runRemoteAction("#cntrl .mir_link")
         }
         miniRemoteRestorePrana.setOnClickListener {
-            latestPult.restorePranaAction?.selector?.let(::runRemoteAction) ?: hideMiniRemote()
+            (latestPult.resurrectionAction ?: latestPult.restorePranaAction)
+                ?.selector
+                ?.let(::runRemoteAction)
+                ?: hideMiniRemote()
         }
         updateNativeTabSelection(NativeTab.PULT)
         updateQuickActionVisibility()
@@ -401,6 +416,16 @@ class MainActivity : AppCompatActivity() {
         nativePultPanel = findViewById(R.id.nativePultPanel)
         nativePultPrana = findViewById(R.id.nativePultPrana)
         nativePultPranaProgress = findViewById(R.id.nativePultPranaProgress)
+        nativePultHintsScroll = findViewById(R.id.nativePultHintsScroll)
+        nativePultHints = findViewById(R.id.nativePultHints)
+        nativePultBeforeVoiceSpacer = findViewById(R.id.nativePultBeforeVoiceSpacer)
+        nativePultVoiceRow = findViewById(R.id.nativePultVoiceRow)
+        nativePultVoiceDivider = findViewById(R.id.nativePultVoiceDivider)
+        nativePultInfluenceRow = findViewById(R.id.nativePultInfluenceRow)
+        nativePultInfluenceDivider = findViewById(R.id.nativePultInfluenceDivider)
+        nativePultBeforeTravelSpacer = findViewById(R.id.nativePultBeforeTravelSpacer)
+        nativePultBeforeAccumulatorSpacer = findViewById(R.id.nativePultBeforeAccumulatorSpacer)
+        nativePultAfterResurrectSpacer = findViewById(R.id.nativePultAfterResurrectSpacer)
         nativeVoiceInput = findViewById(R.id.nativeVoiceInput)
         nativeVoiceSubmit = findViewById(R.id.nativeVoiceSubmit)
         nativePultGood = findViewById(R.id.nativePultGood)
@@ -410,6 +435,7 @@ class MainActivity : AppCompatActivity() {
         nativePultTraining = findViewById(R.id.nativePultTraining)
         nativePultDungeon = findViewById(R.id.nativePultDungeon)
         nativePultSail = findViewById(R.id.nativePultSail)
+        nativePultResurrect = findViewById(R.id.nativePultResurrect)
         nativePultCharge = findViewById(R.id.nativePultCharge)
         nativePultRestorePrana = findViewById(R.id.nativePultRestorePrana)
         nativePultChargeButton = findViewById(R.id.nativePultChargeButton)
@@ -428,13 +454,24 @@ class MainActivity : AppCompatActivity() {
         nativePultGood.setOnClickListener { runRemoteAction("#cntrl .enc_link") }
         nativePultBad.setOnClickListener { runRemoteAction("#cntrl .pun_link") }
         nativePultMiracle.setOnClickListener { runRemoteAction("#cntrl .mir_link") }
-        nativePultArena.setOnClickListener { clickPultAction(".to_arena") }
-        nativePultTraining.setOnClickListener { clickPultAction(".to_training") }
-        nativePultSail.setOnClickListener { clickPultAction(".to_sail") }
+        nativePultArena.setOnClickListener {
+            latestPult.arena?.selector?.let(::clickPultAction)
+        }
+        nativePultTraining.setOnClickListener {
+            latestPult.training?.selector?.let(::clickPultAction)
+        }
+        nativePultSail.setOnClickListener {
+            latestPult.sail?.selector?.let(::clickPultAction)
+        }
+        nativePultResurrect.setOnClickListener {
+            latestPult.resurrectionAction?.selector?.let(::clickPultAction)
+        }
         nativePultRestorePrana.setOnClickListener {
             latestPult.restorePranaAction?.selector?.let(::clickPultAction)
         }
-        nativePultChargeButton.setOnClickListener { clickPultAction(".hch_link") }
+        nativePultChargeButton.setOnClickListener {
+            latestPult.chargeAction?.selector?.let(::clickPultAction)
+        }
     }
 
     private fun renderNativeReplicaSnapshot(snapshot: NativeReplicaSnapshot) {
@@ -445,19 +482,19 @@ class MainActivity : AppCompatActivity() {
         renderNativePult(snapshot.pult)
         renderNativeDiary(snapshot.page)
         renderNativeGenericPage()
+        if (latestUiPlusMenu != snapshot.uiPlusMenu) {
+            latestUiPlusMenu = snapshot.uiPlusMenu
+            nativeMenuList.adapter = GodvilleMenuAdapter(buildGodvilleMenuRows())
+        }
 
         nativeUiPlusLogger.removeAllViews()
         nativeLoggerScroll.visibility = View.GONE
     }
 
     private fun renderNativePult(pult: NativePult) {
-        if (selectedTab != NativeTab.PULT) {
-            nativePultPanel.visibility = View.GONE
-            return
-        }
         latestPult = pult
         updateMiniRemoteContent(pult)
-        nativePultPanel.visibility = View.VISIBLE
+        nativePultPanel.visibility = if (selectedTab == NativeTab.PULT) View.VISIBLE else View.GONE
         nativePultPrana.text = pult.prana.orEmpty()
         nativePultPranaProgress.progress = pult.prana?.removeSuffix("%")?.toIntOrNull()?.coerceIn(0, 100) ?: 0
         nativePultCharge.text = pult.charge?.let { "Зарядов в аккумуляторе: $it" }.orEmpty()
@@ -466,6 +503,7 @@ class MainActivity : AppCompatActivity() {
         nativePultArena.text = pult.arena?.text ?: "Отправить на арену"
         nativePultTraining.text = pult.training?.text ?: "Послать на тренировку"
         nativePultSail.text = pult.sail?.text ?: "Снарядить в плавание"
+        nativePultResurrect.text = pult.resurrectionAction?.text ?: "Воскресить"
         nativePultRestorePrana.text = pult.restorePranaAction
             ?.text
             ?.takeUnless { it.equals("Восстановить", ignoreCase = true) }
@@ -475,6 +513,63 @@ class MainActivity : AppCompatActivity() {
             ?.text
             ?.takeUnless { it.equals("Зарядить", ignoreCase = true) }
             ?: "Зарядить аккумулятор"
+        renderNativePultHints(pult.hints)
+        renderNativePultAvailability(pult)
+    }
+
+    private fun renderNativePultHints(hints: List<NativePultAction>) {
+        nativePultHints.removeAllViews()
+        hints.forEach { action ->
+            nativePultHints.addView(
+                Button(this).apply {
+                    text = action.text
+                    isAllCaps = false
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.shell_action))
+                    textSize = 13f
+                    minWidth = 0
+                    minHeight = 0
+                    setPadding(8.dpInt(), 0, 8.dpInt(), 0)
+                    setBackgroundColor(Color.TRANSPARENT)
+                    setOnClickListener { clickPultAction(action.selector) }
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                },
+            )
+        }
+        nativePultHintsScroll.visibility = if (hints.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun renderNativePultAvailability(pult: NativePult) {
+        val isDead = pult.resurrectionAction != null
+        val voiceVisible = !isDead && pult.voiceAvailable
+        val influenceVisible = !isDead && (pult.goodAvailable || pult.badAvailable)
+        val travelVisible = !isDead && listOf(pult.arena, pult.training, pult.sail).any { it != null }
+
+        nativePultBeforeVoiceSpacer.visibility = if (voiceVisible) View.VISIBLE else View.GONE
+        nativePultVoiceRow.visibility = if (voiceVisible) View.VISIBLE else View.GONE
+        nativePultVoiceDivider.visibility = if (voiceVisible) View.VISIBLE else View.GONE
+        nativePultInfluenceRow.visibility = if (influenceVisible) View.VISIBLE else View.GONE
+        nativePultInfluenceDivider.visibility = if (influenceVisible) View.VISIBLE else View.GONE
+        nativePultGood.visibility = if (!isDead && pult.goodAvailable) View.VISIBLE else View.GONE
+        nativePultBad.visibility = if (!isDead && pult.badAvailable) View.VISIBLE else View.GONE
+        nativePultMiracle.visibility = if (!isDead && pult.miracleAvailable) View.VISIBLE else View.GONE
+        nativePultBeforeTravelSpacer.visibility = if (travelVisible) View.VISIBLE else View.GONE
+        nativePultArena.visibility = if (!isDead && pult.arena != null) View.VISIBLE else View.GONE
+        nativePultTraining.visibility = if (!isDead && pult.training != null) View.VISIBLE else View.GONE
+        nativePultDungeon.visibility = if (!isDead && !pult.dungeon.isNullOrBlank()) View.VISIBLE else View.GONE
+        nativePultSail.visibility = if (!isDead && pult.sail != null) View.VISIBLE else View.GONE
+        nativePultBeforeAccumulatorSpacer.visibility = View.VISIBLE
+        nativePultBeforeAccumulatorSpacer.layoutParams = nativePultBeforeAccumulatorSpacer.layoutParams.apply {
+            height = (if (isDead) 28 else 19).dpInt()
+        }
+        nativePultResurrect.visibility = if (isDead) View.VISIBLE else View.GONE
+        nativePultAfterResurrectSpacer.visibility = if (isDead) View.VISIBLE else View.GONE
+        nativePultRestorePrana.visibility = if (!isDead && pult.restorePranaAction != null) View.VISIBLE else View.GONE
+        nativePultCharge.visibility = if (!pult.charge.isNullOrBlank()) View.VISIBLE else View.GONE
+        nativePultChargeButton.visibility = if (pult.chargeAction != null) View.VISIBLE else View.GONE
+        nativePultBlessing.visibility = if (!pult.blessing.isNullOrBlank()) View.VISIBLE else View.GONE
     }
 
     private fun renderNativeDiary(page: NativePage) {
@@ -893,9 +988,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateMiniRemoteContent(pult: NativePult = latestPult) {
+        val actions = pult.availableMiniRemoteActions().toSet()
+        val resurrection = NativeMiniRemoteAction.RESURRECT in actions
+        miniRemoteMiracle.visibility = visibilityFor(NativeMiniRemoteAction.MIRACLE, actions)
+        miniRemoteMiracleLabel.visibility = miniRemoteMiracle.visibility
+        miniRemoteBad.visibility = visibilityFor(NativeMiniRemoteAction.BAD, actions)
+        miniRemoteBadLabel.visibility = miniRemoteBad.visibility
+        miniRemoteVoice.visibility = visibilityFor(NativeMiniRemoteAction.VOICE, actions)
+        miniRemoteVoiceLabel.visibility = miniRemoteVoice.visibility
+        miniRemoteGood.visibility = visibilityFor(NativeMiniRemoteAction.GOOD, actions)
+        miniRemoteGoodLabel.visibility = miniRemoteGood.visibility
+        miniRemoteRestorePrana.setImageResource(
+            if (resurrection) R.drawable.ic_mini_resurrect else R.drawable.ic_mini_charge,
+        )
+        miniRemoteRestorePrana.contentDescription = if (resurrection) "Воскресить" else "Восстановить прану"
+        miniRemoteRestorePranaLabel.text = if (resurrection) "Воскресить" else "Прана"
+
+        if (resurrection) {
+            miniRemoteRestorePrana.visibility = View.VISIBLE
+            miniRemoteRestorePranaLabel.visibility = View.VISIBLE
+            applyMiniRemotePosition(
+                miniRemoteRestorePrana,
+                miniRemoteRestorePranaLabel,
+                MiniRemotePosition(endDp = 144f, bottomDp = 28f, labelEndDp = 128f, labelBottomDp = 13f),
+            )
+            return
+        }
+
         val prana = pult.prana?.removeSuffix("%")?.toIntOrNull()
         val useFiveActionLayout = prana != null && prana <= 50
-        val restoreVisibility = if (useFiveActionLayout && pult.restorePranaAction != null) View.VISIBLE else View.GONE
+        val restoreVisibility = if (
+            useFiveActionLayout &&
+            NativeMiniRemoteAction.RESTORE_PRANA in actions
+        ) View.VISIBLE else View.GONE
         miniRemoteRestorePrana.visibility = restoreVisibility
         miniRemoteRestorePranaLabel.visibility = restoreVisibility
         if (useFiveActionLayout) {
@@ -916,6 +1041,11 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
+
+    private fun visibilityFor(
+        action: NativeMiniRemoteAction,
+        availableActions: Set<NativeMiniRemoteAction>,
+    ): Int = if (action in availableActions) View.VISIBLE else View.GONE
 
     private fun applyMiniRemoteLayout(
         miracle: MiniRemotePosition,
@@ -965,6 +1095,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildGodvilleMenuRows(): List<GodvilleMenuRow> =
         buildList {
+            add(GodvilleMenuRow.Header("Erinome UI+"))
+            val uiPlusRows = latestUiPlusMenu.ifEmpty {
+                listOf(
+                    NativePultAction("Настройки UI+", ".e_m_ui_settings"),
+                    NativePultAction("Астропрогноз", ".e_m_forecast"),
+                    NativePultAction("Справка UI+", ".e_m_ui_help"),
+                )
+            }
+            uiPlusRows.forEach { action ->
+                val title = action.text.replace(Regex("""\s*[➠➜→]+\s*$"""), "")
+                add(GodvilleMenuRow.Action(title) { clickUiPlusMenuSelector(action.selector) })
+            }
             add(GodvilleMenuRow.Action(GodvilleMenuItem.SETTINGS.title) { openMenuUrl("https://godville.net/user/profile/settings") })
             add(GodvilleMenuRow.Action(GodvilleMenuItem.ABOUT.title) { showAbout() })
             add(GodvilleMenuRow.Header("Информация"))
@@ -979,6 +1121,11 @@ class MainActivity : AppCompatActivity() {
             add(GodvilleMenuRow.Action(GodvilleMenuItem.FAQ.title) { openMenuUrl("https://godville.net/help/faq_mob") })
             add(GodvilleMenuRow.Action(GodvilleMenuItem.HINTS.title) { openMenuUrl("https://godville.net/help") })
         }
+
+    private fun clickUiPlusMenuSelector(selector: String) {
+        hideNativeMenu()
+        webView.evaluateJavascript(GodvilleShellScripts.clickSelector(selector), null)
+    }
 
     private fun openMenuUrl(url: String) {
         hideNativeMenu()

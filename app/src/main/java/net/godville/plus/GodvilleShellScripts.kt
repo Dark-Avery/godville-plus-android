@@ -62,6 +62,8 @@ object GodvilleShellScripts {
         })()
     """.trimIndent()
 
+    fun clickSelector(selector: String): String = clickRemoteAction(selector)
+
     fun clickVisibleText(label: String): String {
         val quotedLabel = gson.toJson(label)
         return """
@@ -104,7 +106,7 @@ object GodvilleShellScripts {
 
     fun installNativeReplicaBridge(): String = """
         (function() {
-          const BRIDGE_VERSION = 'native-replica-page-6';
+          const BRIDGE_VERSION = 'native-replica-page-7';
           if (window.__godvillePlusNativeReplicaBridgeVersion === BRIDGE_VERSION) return 'already';
           if (!window.GodvillePlus || !window.GodvillePlus.postMessage) return 'missing-bridge';
           if (window.__godvillePlusNativeReplicaBridgeObserver) {
@@ -117,6 +119,7 @@ object GodvilleShellScripts {
 
           const MAX_SEGMENTS = 32;
           const MAX_TEXT_LENGTH = 64;
+          const MAX_ACTIONS = 16;
           let raf = 0;
 
           function text(value, maxLength) {
@@ -187,18 +190,35 @@ object GodvilleShellScripts {
             return parent + ' > ' + node.tagName.toLowerCase() + ':nth-of-type(' + index + ')';
           }
 
+          function selectorForNode(node) {
+            if (!node) return null;
+            const uiPlusClass = Array.from(node.classList || []).find(function(value) {
+              return /^e_m_/.test(value);
+            });
+            return uiPlusClass ? '.' + CSS.escape(uiPlusClass) : cssPath(node);
+          }
+
           function actionFromLink(link, fallbackLabel) {
             if (!link) return null;
-            const label = text(link.textContent || link.getAttribute('aria-label') || fallbackLabel, MAX_TEXT_LENGTH);
-            const selector = cssPath(link);
+            const label = text(link.textContent || link.value || link.getAttribute('aria-label') || fallbackLabel, MAX_TEXT_LENGTH);
+            const selector = selectorForNode(link);
             return label && selector ? { text: label, selector: selector } : null;
           }
 
           function findPultAction(pattern) {
-            const links = Array.from(document.querySelectorAll('#cntrl a, #cntrl2 a, #control a'));
+            const links = Array.from(document.querySelectorAll('#cntrl a, #cntrl button, #cntrl input[type="button"], #cntrl input[type="submit"], #cntrl2 a, #control a'));
             return actionFromLink(links.find(function(link) {
-              return pattern.test(text(link.textContent, MAX_TEXT_LENGTH));
+              return isActuallyVisible(link) &&
+                pattern.test(text(link.textContent || link.value || link.getAttribute('aria-label'), MAX_TEXT_LENGTH));
             }));
+          }
+
+          function isActuallyVisible(node) {
+            if (!node) return false;
+            const style = window.getComputedStyle(node);
+            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
           }
 
           function collectPult() {
@@ -207,15 +227,17 @@ object GodvilleShellScripts {
             const rootText = String(root.innerText || root.textContent || '').replace(/\s+/g, ' ').trim();
             const pranaNode = root.querySelector('.gp_val');
             const chargeNode = root.querySelector('.acc_val');
-            const blessingNode = document.querySelector('.e_bless .line, .e_bless, #cntrl + .line');
+            const blessingNode = Array.from(document.querySelectorAll('.e_bless, #cntrl ~ .line')).find(function(node) {
+              return /Благослов|Blessed/i.test(text(node.innerText || node.textContent, MAX_TEXT_LENGTH * 2));
+            });
             const blessingText = blessingNode
               ? String(blessingNode.innerText || blessingNode.textContent || '').replace(/\s+/g, ' ').trim()
               : '';
             const prana = pranaNode ? text(pranaNode.textContent, MAX_TEXT_LENGTH).match(/\d+/) : null;
             const blessing = (
-              blessingText.match(/Благословл[её]н(?:а|ён)?\s+на\s+\d+\s+(?:дн(?:я|ей)|days?)/i) ||
+              blessingText.match(/Благословл[её]н(?:а|ён)?\s+на\s+\d+\s+(?:д(?:ень|ня|ней)|days?)/i) ||
               blessingText.match(/Blessed\s+for\s+\d+\s+days?/i) ||
-              rootText.match(/Благословл[её]н(?:а|ён)?\s+на\s+\d+\s+(?:дн(?:я|ей)|days?)/i) ||
+              rootText.match(/Благословл[её]н(?:а|ён)?\s+на\s+\d+\s+(?:д(?:ень|ня|ней)|days?)/i) ||
               rootText.match(/Blessed\s+for\s+\d+\s+days?/i) ||
               [null]
             )[0];
@@ -229,6 +251,16 @@ object GodvilleShellScripts {
               rootText.match(/Accumulator charges:\s*\d+/i) ||
               [null]
             )[0];
+            const resurrectionAction = findPultAction(/воскрес|ожив|resurrect|revive/i);
+            const voiceNode = root.querySelector('#godvoice, #god_phrase, .voice_line input, .voice_line textarea');
+            const goodNode = root.querySelector('.enc_link');
+            const badNode = root.querySelector('.pun_link');
+            const miracleNode = root.querySelector('.mir_link');
+            const hints = Array.from(root.querySelectorAll('.voice_generator'))
+              .filter(isActuallyVisible)
+              .slice(0, MAX_ACTIONS)
+              .map(function(node) { return actionFromLink(node); })
+              .filter(Boolean);
             return {
               prana: prana ? prana[0] + '%' : null,
               charge: chargeNode
@@ -238,14 +270,30 @@ object GodvilleShellScripts {
                   : null,
               blessing: blessing ? text(blessing, MAX_TEXT_LENGTH) : null,
               dungeon: dungeon ? text(dungeon, MAX_TEXT_LENGTH) : null,
+              hints: hints,
               arena: findPultAction(/арен|arena/i),
               training: findPultAction(/трениров|train/i),
               sail: findPultAction(/плавани|sail/i),
+              resurrectionAction: resurrectionAction,
               restorePranaAction:
-                actionFromLink(document.querySelector('#acc_links_wrap .dch_link, #cntrl .dch_link'), 'Восстановить прану') ||
+                actionFromLink(Array.from(document.querySelectorAll('#acc_links_wrap .dch_link, #cntrl .dch_link')).find(isActuallyVisible), 'Восстановить прану') ||
                 findPultAction(/восстановить\s+прану|restore\s+godpower|recharge\s+godpower/i),
-              chargeAction: actionFromLink(root.querySelector('.hch_link'), 'Зарядить аккумулятор') || findPultAction(/зарядить\s+аккумулятор|charge\s+accumulator/i)
+              chargeAction: actionFromLink(Array.from(root.querySelectorAll('.hch_link')).find(isActuallyVisible), 'Зарядить аккумулятор') || findPultAction(/зарядить\s+аккумулятор|charge\s+accumulator/i),
+              voiceAvailable: isActuallyVisible(voiceNode),
+              goodAvailable: isActuallyVisible(goodNode),
+              badAvailable: isActuallyVisible(badNode),
+              miracleAvailable: isActuallyVisible(miracleNode)
             };
+          }
+
+          function collectUiPlusMenu() {
+            return Array.from(document.querySelectorAll(
+              '.e_m_ui_settings,.e_m_forecast,.e_m_available_coupon,.e_m_available_ad,.e_m_ui_help,.e_mt_forum_informers'
+            )).filter(function(node) {
+              return !node.classList.contains('hidden') && window.getComputedStyle(node).display !== 'none';
+            }).slice(0, MAX_ACTIONS).map(function(node) {
+              return actionFromLink(node);
+            }).filter(Boolean);
           }
 
           function isVisible(node) {
@@ -321,7 +369,8 @@ object GodvilleShellScripts {
               status: collectStatus(),
               logger: collectLogger(),
               pult: collectPult(),
-              page: collectDiaryPage()
+              page: collectDiaryPage(),
+              uiPlusMenu: collectUiPlusMenu()
             };
             window.GodvillePlus.postMessage(JSON.stringify({
               type: 'nativeSnapshot',

@@ -220,11 +220,30 @@
                         android:progressTint="@color/shell_accent"
                         android:progressBackgroundTint="#444444" />
 
+                    <HorizontalScrollView
+                        android:id="@+id/nativePultHintsScroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:fillViewport="false"
+                        android:overScrollMode="never"
+                        android:scrollbars="none"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:id="@+id/nativePultHints"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal" />
+                    </HorizontalScrollView>
+
                     <View
+                        android:id="@+id/nativePultBeforeVoiceSpacer"
                         android:layout_width="match_parent"
                         android:layout_height="12dp" />
 
                     <LinearLayout
+                        android:id="@+id/nativePultVoiceRow"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:gravity="center_vertical"
@@ -264,11 +283,13 @@
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/nativePultVoiceDivider"
                         android:layout_width="match_parent"
                         android:layout_height="1px"
                         android:background="@color/shell_divider" />
 
                     <LinearLayout
+                        android:id="@+id/nativePultInfluenceRow"
                         android:layout_width="match_parent"
                         android:layout_height="72dp"
                         android:orientation="horizontal">
@@ -296,6 +317,7 @@
                     </LinearLayout>
 
                     <View
+                        android:id="@+id/nativePultInfluenceDivider"
                         android:layout_width="match_parent"
                         android:layout_height="1px"
                         android:background="@color/shell_divider" />
@@ -308,6 +330,7 @@
                         android:text="@string/action_miracle" />
 
                     <View
+                        android:id="@+id/nativePultBeforeTravelSpacer"
                         android:layout_width="match_parent"
                         android:layout_height="19dp" />
 
@@ -342,8 +365,25 @@
                         tools:text="Снарядить в плавание" />
 
                     <View
+                        android:id="@+id/nativePultBeforeAccumulatorSpacer"
                         android:layout_width="match_parent"
                         android:layout_height="19dp" />
+
+                    <Button
+                        android:id="@+id/nativePultResurrect"
+                        style="@style/NativePultButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="47dp"
+                        android:text="Воскресить"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <View
+                        android:id="@+id/nativePultAfterResurrectSpacer"
+                        android:layout_width="match_parent"
+                        android:layout_height="18dp"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                     <TextView
                         android:id="@+id/nativePultCharge"

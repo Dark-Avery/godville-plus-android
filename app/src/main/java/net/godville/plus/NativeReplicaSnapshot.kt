@@ -8,6 +8,7 @@ data class NativeReplicaSnapshot(
     val logger: NativeLogger,
     val pult: NativePult,
     val page: NativePage,
+    val uiPlusMenu: List<NativePultAction> = emptyList(),
 ) {
     companion object {
         private const val MAX_PAYLOAD_LENGTH = 64 * 1024
@@ -17,6 +18,7 @@ data class NativeReplicaSnapshot(
         private const val MAX_PAGE_TEXT_LENGTH = 220
         private const val MAX_DIARY_ROWS = 40
         private const val MAX_PAGE_LINES = 120
+        private const val MAX_ACTIONS = 16
         private const val MAX_SELECTOR_LENGTH = 256
         private const val DEFAULT_LOGGER_COLOR = "#A7A9B0"
 
@@ -61,9 +63,11 @@ data class NativeReplicaSnapshot(
                     charge = pultJson?.boundedText("charge", MAX_STATUS_TEXT_LENGTH),
                     blessing = pultJson?.boundedText("blessing", MAX_LOGGER_TEXT_LENGTH),
                     dungeon = pultJson?.boundedText("dungeon", MAX_LOGGER_TEXT_LENGTH),
+                    hints = pultJson?.actionList("hints").orEmpty(),
                     arena = pultJson?.action("arena"),
                     training = pultJson?.action("training"),
                     sail = pultJson?.action("sail"),
+                    resurrectionAction = pultJson?.action("resurrectionAction"),
                     restorePranaAction = pultJson?.action("restorePranaAction"),
                     chargeAction = pultJson?.action("chargeAction"),
                     voiceAvailable = pultJson?.boolean("voiceAvailable", false) ?: false,
@@ -101,6 +105,7 @@ data class NativeReplicaSnapshot(
                         }
                         .orEmpty(),
                 ),
+                uiPlusMenu = json.actionList("uiPlusMenu"),
             )
         }
 
@@ -138,6 +143,21 @@ data class NativeReplicaSnapshot(
             return NativePultAction(text = text, selector = selector)
         }
 
+        private fun JsonObject.actionList(name: String): List<NativePultAction> =
+            getAsJsonArrayOrNull(name)
+                ?.take(MAX_ACTIONS)
+                ?.mapNotNull { element ->
+                    val value = runCatching { element.asJsonObject }.getOrNull() ?: return@mapNotNull null
+                    val text = value.boundedText("text", MAX_LOGGER_TEXT_LENGTH)
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return@mapNotNull null
+                    val selector = value.boundedText("selector", MAX_SELECTOR_LENGTH)
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return@mapNotNull null
+                    NativePultAction(text = text, selector = selector)
+                }
+                .orEmpty()
+
         private val HEX_COLOR = Regex("^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$")
         private val DIARY_TIME = Regex("""\d{2}:\d{2}""")
     }
@@ -167,16 +187,40 @@ data class NativePult(
     val charge: String? = null,
     val blessing: String? = null,
     val dungeon: String? = null,
+    val hints: List<NativePultAction> = emptyList(),
     val arena: NativePultAction? = null,
     val training: NativePultAction? = null,
     val sail: NativePultAction? = null,
+    val resurrectionAction: NativePultAction? = null,
     val restorePranaAction: NativePultAction? = null,
     val chargeAction: NativePultAction? = null,
     val voiceAvailable: Boolean = false,
     val goodAvailable: Boolean = false,
     val badAvailable: Boolean = false,
     val miracleAvailable: Boolean = false,
-)
+) {
+    fun availableMiniRemoteActions(): List<NativeMiniRemoteAction> {
+        if (resurrectionAction != null) {
+            return listOf(NativeMiniRemoteAction.RESURRECT)
+        }
+        return buildList {
+            if (miracleAvailable) add(NativeMiniRemoteAction.MIRACLE)
+            if (badAvailable) add(NativeMiniRemoteAction.BAD)
+            if (voiceAvailable) add(NativeMiniRemoteAction.VOICE)
+            if (goodAvailable) add(NativeMiniRemoteAction.GOOD)
+            if (restorePranaAction != null) add(NativeMiniRemoteAction.RESTORE_PRANA)
+        }
+    }
+}
+
+enum class NativeMiniRemoteAction {
+    RESURRECT,
+    RESTORE_PRANA,
+    MIRACLE,
+    BAD,
+    VOICE,
+    GOOD,
+}
 
 data class NativePultAction(
     val text: String,
